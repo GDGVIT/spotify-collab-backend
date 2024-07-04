@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS public.users (
 	user_uuid uuid DEFAULT uuid_generate_v4() NOT NULL,
 	created_at timestamp with time zone DEFAULT Now() NOT NULL,
 	updated_at timestamp with time zone DEFAULT Now() NOT NULL,
-	username text NOT NULL,
+	name text NOT NULL,
 	email public."citext" NOT NULL,
 	password_hash bytea NOT NULL,
 	activated boolean DEFAULT false NOT NULL,

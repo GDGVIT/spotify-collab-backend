@@ -7,15 +7,65 @@ package database
 
 import (
 	"context"
+
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
-const getAllEvents = `-- name: GetAllEvents :many
-SELECT user_uuid, event_uuid, created_at, updated_at, event_code
-FROM events
+const createEvent = `-- name: CreateEvent :one
+INSERT INTO events (user_uuid, event_uuid, name, event_code)
+VALUES ($1, $2, $3, $4)
+RETURNING user_uuid, event_uuid, created_at, updated_at, name, event_code
 `
 
-func (q *Queries) GetAllEvents(ctx context.Context) ([]Event, error) {
-	rows, err := q.db.Query(ctx, getAllEvents)
+type CreateEventParams struct {
+	UserUuid  pgtype.UUID `json:"user_uuid"`
+	EventUuid pgtype.UUID `json:"event_uuid"`
+	Name      string      `json:"name"`
+	EventCode string      `json:"event_code"`
+}
+
+func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
+	row := q.db.QueryRow(ctx, createEvent,
+		arg.UserUuid,
+		arg.EventUuid,
+		arg.Name,
+		arg.EventCode,
+	)
+	var i Event
+	err := row.Scan(
+		&i.UserUuid,
+		&i.EventUuid,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+		&i.EventCode,
+	)
+	return i, err
+}
+
+const deleteEvent = `-- name: DeleteEvent :exec
+DELETE FROM events
+WHERE user_uuid = $1 AND event_uuid = $2
+`
+
+type DeleteEventParams struct {
+	UserUuid  pgtype.UUID `json:"user_uuid"`
+	EventUuid pgtype.UUID `json:"event_uuid"`
+}
+
+func (q *Queries) DeleteEvent(ctx context.Context, arg DeleteEventParams) error {
+	_, err := q.db.Exec(ctx, deleteEvent, arg.UserUuid, arg.EventUuid)
+	return err
+}
+
+const getAllEvents = `-- name: GetAllEvents :many
+SELECT user_uuid, event_uuid, created_at, updated_at, name, event_code
+FROM events
+WHERE user_uuid = $1
+`
+
+func (q *Queries) GetAllEvents(ctx context.Context, userUuid pgtype.UUID) ([]Event, error) {
+	rows, err := q.db.Query(ctx, getAllEvents, userUuid)
 	if err != nil {
 		return nil, err
 	}
@@ -28,6 +78,7 @@ func (q *Queries) GetAllEvents(ctx context.Context) ([]Event, error) {
 			&i.EventUuid,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Name,
 			&i.EventCode,
 		); err != nil {
 			return nil, err
@@ -38,4 +89,69 @@ func (q *Queries) GetAllEvents(ctx context.Context) ([]Event, error) {
 		return nil, err
 	}
 	return items, nil
+}
+
+const getEvent = `-- name: GetEvent :one
+SELECT user_uuid, event_uuid, created_at, updated_at, name, event_code
+FROM events
+WHERE user_uuid = $1 AND event_uuid = $2
+`
+
+type GetEventParams struct {
+	UserUuid  pgtype.UUID `json:"user_uuid"`
+	EventUuid pgtype.UUID `json:"event_uuid"`
+}
+
+func (q *Queries) GetEvent(ctx context.Context, arg GetEventParams) (Event, error) {
+	row := q.db.QueryRow(ctx, getEvent, arg.UserUuid, arg.EventUuid)
+	var i Event
+	err := row.Scan(
+		&i.UserUuid,
+		&i.EventUuid,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+		&i.EventCode,
+	)
+	return i, err
+}
+
+const getEventUUIDByName = `-- name: GetEventUUIDByName :one
+SELECT event_uuid
+FROM events
+WHERE name = $1
+`
+
+func (q *Queries) GetEventUUIDByName(ctx context.Context, name string) (pgtype.UUID, error) {
+	row := q.db.QueryRow(ctx, getEventUUIDByName, name)
+	var event_uuid pgtype.UUID
+	err := row.Scan(&event_uuid)
+	return event_uuid, err
+}
+
+const updateEventName = `-- name: UpdateEventName :one
+UPDATE events
+SET name = $1
+WHERE user_uuid = $2 AND event_uuid = $3
+RETURNING user_uuid, event_uuid, created_at, updated_at, name, event_code
+`
+
+type UpdateEventNameParams struct {
+	Name      string      `json:"name"`
+	UserUuid  pgtype.UUID `json:"user_uuid"`
+	EventUuid pgtype.UUID `json:"event_uuid"`
+}
+
+func (q *Queries) UpdateEventName(ctx context.Context, arg UpdateEventNameParams) (Event, error) {
+	row := q.db.QueryRow(ctx, updateEventName, arg.Name, arg.UserUuid, arg.EventUuid)
+	var i Event
+	err := row.Scan(
+		&i.UserUuid,
+		&i.EventUuid,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Name,
+		&i.EventCode,
+	)
+	return i, err
 }

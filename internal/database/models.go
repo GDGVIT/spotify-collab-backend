@@ -9,35 +9,36 @@ import (
 )
 
 type Event struct {
-	UserUuid  pgtype.UUID        `json:"userUuid"`
-	EventUuid pgtype.UUID        `json:"eventUuid"`
-	CreatedAt pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt pgtype.Timestamptz `json:"updatedAt"`
-	EventCode string             `json:"eventCode"`
+	UserUuid  pgtype.UUID        `json:"user_uuid"`
+	EventUuid pgtype.UUID        `json:"event_uuid"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	Name      string             `json:"name"`
+	EventCode string             `json:"event_code"`
 }
 
 type Playlist struct {
-	EventUuid  pgtype.UUID        `json:"eventUuid"`
-	PlaylistID string             `json:"playlistID"`
+	EventUuid  pgtype.UUID        `json:"event_uuid"`
+	PlaylistID string             `json:"playlist_id"`
 	Name       string             `json:"name"`
-	CreatedAt  pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt  pgtype.Timestamptz `json:"updatedAt"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
 }
 
 type Song struct {
-	SongUri    string `json:"songUri"`
-	PlaylistID string `json:"playlistID"`
+	SongUri    string `json:"song_uri"`
+	PlaylistID string `json:"playlist_id"`
 	Count      int32  `json:"count"`
 }
 
 type User struct {
 	ID           int64              `json:"id"`
-	UserUuid     pgtype.UUID        `json:"userUuid"`
-	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
-	UpdatedAt    pgtype.Timestamptz `json:"updatedAt"`
-	Username     string             `json:"username"`
+	UserUuid     pgtype.UUID        `json:"user_uuid"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+	Name         string             `json:"name"`
 	Email        interface{}        `json:"email"`
-	PasswordHash []byte             `json:"passwordHash"`
+	PasswordHash []byte             `json:"password_hash"`
 	Activated    bool               `json:"activated"`
 	Version      int32              `json:"version"`
 }
