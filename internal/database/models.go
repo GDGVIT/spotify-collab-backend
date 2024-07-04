@@ -5,12 +5,13 @@
 package database
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Event struct {
-	UserUuid  pgtype.UUID        `json:"user_uuid"`
-	EventUuid pgtype.UUID        `json:"event_uuid"`
+	UserUuid  uuid.UUID          `json:"user_uuid"`
+	EventUuid uuid.UUID          `json:"event_uuid"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
 	Name      string             `json:"name"`
@@ -18,7 +19,7 @@ type Event struct {
 }
 
 type Playlist struct {
-	EventUuid  pgtype.UUID        `json:"event_uuid"`
+	EventUuid  uuid.UUID          `json:"event_uuid"`
 	PlaylistID string             `json:"playlist_id"`
 	Name       string             `json:"name"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
@@ -31,9 +32,16 @@ type Song struct {
 	Count      int32  `json:"count"`
 }
 
+type Token struct {
+	Hash     []byte             `json:"hash"`
+	UserUuid uuid.UUID          `json:"user_uuid"`
+	Expiry   pgtype.Timestamptz `json:"expiry"`
+	Scope    string             `json:"scope"`
+}
+
 type User struct {
 	ID           int64              `json:"id"`
-	UserUuid     pgtype.UUID        `json:"user_uuid"`
+	UserUuid     uuid.UUID          `json:"user_uuid"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 	Name         string             `json:"name"`

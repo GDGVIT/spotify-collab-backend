@@ -8,7 +8,7 @@ package database
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 )
 
 const createPlaylist = `-- name: CreatePlaylist :one
@@ -18,9 +18,9 @@ RETURNING event_uuid, playlist_id, name, created_at, updated_at
 `
 
 type CreatePlaylistParams struct {
-	PlaylistID string      `json:"playlist_id"`
-	EventUuid  pgtype.UUID `json:"event_uuid"`
-	Name       string      `json:"name"`
+	PlaylistID string    `json:"playlist_id"`
+	EventUuid  uuid.UUID `json:"event_uuid"`
+	Name       string    `json:"name"`
 }
 
 func (q *Queries) CreatePlaylist(ctx context.Context, arg CreatePlaylistParams) (Playlist, error) {
@@ -42,8 +42,8 @@ WHERE event_uuid = $1 AND playlist_id = $2
 `
 
 type DeletePlaylistParams struct {
-	EventUuid  pgtype.UUID `json:"event_uuid"`
-	PlaylistID string      `json:"playlist_id"`
+	EventUuid  uuid.UUID `json:"event_uuid"`
+	PlaylistID string    `json:"playlist_id"`
 }
 
 func (q *Queries) DeletePlaylist(ctx context.Context, arg DeletePlaylistParams) error {
@@ -57,7 +57,7 @@ FROM playlists
 WHERE event_uuid = $1
 `
 
-func (q *Queries) GetAllPlaylists(ctx context.Context, eventUuid pgtype.UUID) ([]Playlist, error) {
+func (q *Queries) GetAllPlaylists(ctx context.Context, eventUuid uuid.UUID) ([]Playlist, error) {
 	rows, err := q.db.Query(ctx, getAllPlaylists, eventUuid)
 	if err != nil {
 		return nil, err
@@ -90,8 +90,8 @@ WHERE event_uuid = $1 AND playlist_id = $2
 `
 
 type GetPlaylistParams struct {
-	EventUuid  pgtype.UUID `json:"event_uuid"`
-	PlaylistID string      `json:"playlist_id"`
+	EventUuid  uuid.UUID `json:"event_uuid"`
+	PlaylistID string    `json:"playlist_id"`
 }
 
 func (q *Queries) GetPlaylist(ctx context.Context, arg GetPlaylistParams) (Playlist, error) {
@@ -114,8 +114,8 @@ WHERE event_uuid = $1 AND name = $2
 `
 
 type GetPlaylistUUIDByNameParams struct {
-	EventUuid pgtype.UUID `json:"event_uuid"`
-	Name      string      `json:"name"`
+	EventUuid uuid.UUID `json:"event_uuid"`
+	Name      string    `json:"name"`
 }
 
 func (q *Queries) GetPlaylistUUIDByName(ctx context.Context, arg GetPlaylistUUIDByNameParams) (string, error) {
@@ -133,9 +133,9 @@ RETURNING event_uuid, playlist_id, name, created_at, updated_at
 `
 
 type UpdatePlaylistNameParams struct {
-	Name       string      `json:"name"`
-	EventUuid  pgtype.UUID `json:"event_uuid"`
-	PlaylistID string      `json:"playlist_id"`
+	Name       string    `json:"name"`
+	EventUuid  uuid.UUID `json:"event_uuid"`
+	PlaylistID string    `json:"playlist_id"`
 }
 
 func (q *Queries) UpdatePlaylistName(ctx context.Context, arg UpdatePlaylistNameParams) (Playlist, error) {

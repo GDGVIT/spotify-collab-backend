@@ -8,6 +8,7 @@ package database
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -25,7 +26,7 @@ type CreateUserParams struct {
 }
 
 type CreateUserRow struct {
-	UserUuid  pgtype.UUID        `json:"user_uuid"`
+	UserUuid  uuid.UUID          `json:"user_uuid"`
 	ID        int64              `json:"id"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	Version   int32              `json:"version"`
@@ -53,7 +54,7 @@ DELETE FROM users
 WHERE user_uuid = $1
 `
 
-func (q *Queries) DeleteUser(ctx context.Context, userUuid pgtype.UUID) error {
+func (q *Queries) DeleteUser(ctx context.Context, userUuid uuid.UUID) error {
 	_, err := q.db.Exec(ctx, deleteUser, userUuid)
 	return err
 }
@@ -87,7 +88,7 @@ FROM users
 WHERE user_uuid = $1
 `
 
-func (q *Queries) GetUserByUUID(ctx context.Context, userUuid pgtype.UUID) (User, error) {
+func (q *Queries) GetUserByUUID(ctx context.Context, userUuid uuid.UUID) (User, error) {
 	row := q.db.QueryRow(ctx, getUserByUUID, userUuid)
 	var i User
 	err := row.Scan(

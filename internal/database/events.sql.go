@@ -8,7 +8,7 @@ package database
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/google/uuid"
 )
 
 const createEvent = `-- name: CreateEvent :one
@@ -18,10 +18,10 @@ RETURNING user_uuid, event_uuid, created_at, updated_at, name, event_code
 `
 
 type CreateEventParams struct {
-	UserUuid  pgtype.UUID `json:"user_uuid"`
-	EventUuid pgtype.UUID `json:"event_uuid"`
-	Name      string      `json:"name"`
-	EventCode string      `json:"event_code"`
+	UserUuid  uuid.UUID `json:"user_uuid"`
+	EventUuid uuid.UUID `json:"event_uuid"`
+	Name      string    `json:"name"`
+	EventCode string    `json:"event_code"`
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
@@ -49,8 +49,8 @@ WHERE user_uuid = $1 AND event_uuid = $2
 `
 
 type DeleteEventParams struct {
-	UserUuid  pgtype.UUID `json:"user_uuid"`
-	EventUuid pgtype.UUID `json:"event_uuid"`
+	UserUuid  uuid.UUID `json:"user_uuid"`
+	EventUuid uuid.UUID `json:"event_uuid"`
 }
 
 func (q *Queries) DeleteEvent(ctx context.Context, arg DeleteEventParams) error {
@@ -64,7 +64,7 @@ FROM events
 WHERE user_uuid = $1
 `
 
-func (q *Queries) GetAllEvents(ctx context.Context, userUuid pgtype.UUID) ([]Event, error) {
+func (q *Queries) GetAllEvents(ctx context.Context, userUuid uuid.UUID) ([]Event, error) {
 	rows, err := q.db.Query(ctx, getAllEvents, userUuid)
 	if err != nil {
 		return nil, err
@@ -98,8 +98,8 @@ WHERE user_uuid = $1 AND event_uuid = $2
 `
 
 type GetEventParams struct {
-	UserUuid  pgtype.UUID `json:"user_uuid"`
-	EventUuid pgtype.UUID `json:"event_uuid"`
+	UserUuid  uuid.UUID `json:"user_uuid"`
+	EventUuid uuid.UUID `json:"event_uuid"`
 }
 
 func (q *Queries) GetEvent(ctx context.Context, arg GetEventParams) (Event, error) {
@@ -122,9 +122,9 @@ FROM events
 WHERE name = $1
 `
 
-func (q *Queries) GetEventUUIDByName(ctx context.Context, name string) (pgtype.UUID, error) {
+func (q *Queries) GetEventUUIDByName(ctx context.Context, name string) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, getEventUUIDByName, name)
-	var event_uuid pgtype.UUID
+	var event_uuid uuid.UUID
 	err := row.Scan(&event_uuid)
 	return event_uuid, err
 }
@@ -137,9 +137,9 @@ RETURNING user_uuid, event_uuid, created_at, updated_at, name, event_code
 `
 
 type UpdateEventNameParams struct {
-	Name      string      `json:"name"`
-	UserUuid  pgtype.UUID `json:"user_uuid"`
-	EventUuid pgtype.UUID `json:"event_uuid"`
+	Name      string    `json:"name"`
+	UserUuid  uuid.UUID `json:"user_uuid"`
+	EventUuid uuid.UUID `json:"event_uuid"`
 }
 
 func (q *Queries) UpdateEventName(ctx context.Context, arg UpdateEventNameParams) (Event, error) {
