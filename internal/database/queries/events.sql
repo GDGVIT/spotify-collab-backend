@@ -1,6 +1,6 @@
 -- name: CreateEvent :one
-INSERT INTO events (user_uuid, event_uuid, name, event_code)
-VALUES ($1, $2, $3, $4)
+INSERT INTO events (user_uuid, name, event_code)
+VALUES ($1, $2, $3)
 RETURNING *;
 
 -- name: GetAllEvents :many
@@ -17,6 +17,11 @@ WHERE user_uuid = $1 AND event_uuid = $2;
 SELECT event_uuid
 FROM events
 WHERE name = $1;
+
+-- name: GetEventUUIDByCode :one
+Select event_uuid
+FROM events
+WHERE event_code = $1;
 
 -- name: UpdateEventName :one
 UPDATE events

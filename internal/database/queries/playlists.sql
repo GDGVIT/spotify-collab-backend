@@ -13,11 +13,17 @@ SELECT *
 FROM playlists
 WHERE event_uuid = $1 AND playlist_id = $2;
 
-
 -- name: GetPlaylistUUIDByName :one
 SELECT playlist_id 
 FROM playlists
 WHERE event_uuid = $1 AND name = $2;
+
+-- name: GetPlaylistUUIDByEventUUID :one
+Select playlist_id
+FROM playlists
+WHERE event_uuid = $1
+ORDER BY created_at desc
+Limit 1;
 
 -- name: UpdatePlaylistName :one
 UPDATE playlists

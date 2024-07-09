@@ -12,25 +12,19 @@ import (
 )
 
 const createEvent = `-- name: CreateEvent :one
-INSERT INTO events (user_uuid, event_uuid, name, event_code)
-VALUES ($1, $2, $3, $4)
+INSERT INTO events (user_uuid, name, event_code)
+VALUES ($1, $2, $3)
 RETURNING user_uuid, event_uuid, created_at, updated_at, name, event_code
 `
 
 type CreateEventParams struct {
 	UserUuid  uuid.UUID `json:"user_uuid"`
-	EventUuid uuid.UUID `json:"event_uuid"`
 	Name      string    `json:"name"`
 	EventCode string    `json:"event_code"`
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
-	row := q.db.QueryRow(ctx, createEvent,
-		arg.UserUuid,
-		arg.EventUuid,
-		arg.Name,
-		arg.EventCode,
-	)
+	row := q.db.QueryRow(ctx, createEvent, arg.UserUuid, arg.Name, arg.EventCode)
 	var i Event
 	err := row.Scan(
 		&i.UserUuid,
@@ -114,6 +108,19 @@ func (q *Queries) GetEvent(ctx context.Context, arg GetEventParams) (Event, erro
 		&i.EventCode,
 	)
 	return i, err
+}
+
+const getEventUUIDByCode = `-- name: GetEventUUIDByCode :one
+Select event_uuid
+FROM events
+WHERE event_code = $1
+`
+
+func (q *Queries) GetEventUUIDByCode(ctx context.Context, eventCode string) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getEventUUIDByCode, eventCode)
+	var event_uuid uuid.UUID
+	err := row.Scan(&event_uuid)
+	return event_uuid, err
 }
 
 const getEventUUIDByName = `-- name: GetEventUUIDByName :one
