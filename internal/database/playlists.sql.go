@@ -107,6 +107,21 @@ func (q *Queries) GetPlaylist(ctx context.Context, arg GetPlaylistParams) (Playl
 	return i, err
 }
 
+const getPlaylistUUIDByEventUUID = `-- name: GetPlaylistUUIDByEventUUID :one
+Select playlist_id
+FROM playlists
+WHERE event_uuid = $1
+ORDER BY created_at desc
+Limit 1
+`
+
+func (q *Queries) GetPlaylistUUIDByEventUUID(ctx context.Context, eventUuid uuid.UUID) (string, error) {
+	row := q.db.QueryRow(ctx, getPlaylistUUIDByEventUUID, eventUuid)
+	var playlist_id string
+	err := row.Scan(&playlist_id)
+	return playlist_id, err
+}
+
 const getPlaylistUUIDByName = `-- name: GetPlaylistUUIDByName :one
 SELECT playlist_id 
 FROM playlists
