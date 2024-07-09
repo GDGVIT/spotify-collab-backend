@@ -7,23 +7,28 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/joho/godotenv/autoload"
 
+	"spotify-collab/internal/controllers/v1/events"
 	"spotify-collab/internal/database"
 )
 
 type Server struct {
 	port int
 
-	db database.Service
+	db           *pgxpool.Pool
+	eventHandler *events.EventHandler
 }
 
 func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
+	db := database.NewService()
 	NewServer := &Server{
 		port: port,
 
-		db: database.NewService(),
+		db:           db,
+		eventHandler: events.Handler(db),
 	}
 
 	// Declare Server config
