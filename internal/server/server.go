@@ -11,14 +11,18 @@ import (
 	_ "github.com/joho/godotenv/autoload"
 
 	"spotify-collab/internal/controllers/v1/events"
+	"spotify-collab/internal/controllers/v1/playlists"
+	"spotify-collab/internal/controllers/v1/songs"
 	"spotify-collab/internal/database"
 )
 
 type Server struct {
 	port int
 
-	db           *pgxpool.Pool
-	eventHandler *events.EventHandler
+	db              *pgxpool.Pool
+	eventHandler    *events.EventHandler
+	playlistHandler *playlists.PlaylistHandler
+	songHandler     *songs.SongHandler
 }
 
 func NewServer() *http.Server {
@@ -27,8 +31,10 @@ func NewServer() *http.Server {
 	NewServer := &Server{
 		port: port,
 
-		db:           db,
-		eventHandler: events.Handler(db),
+		db:              db,
+		eventHandler:    events.Handler(db),
+		playlistHandler: playlists.Handler(db),
+		songHandler:     songs.Handler(db),
 	}
 
 	// Declare Server config

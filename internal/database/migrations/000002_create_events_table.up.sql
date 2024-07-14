@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS public.events (
 	name citext NOT NULL,
 	event_code citext NOT NULL,
 	CONSTRAINT events_pk PRIMARY KEY (event_uuid),
-	CONSTRAINT events_name_unique UNIQUE (name),
+	CONSTRAINT events_name_unique UNIQUE (event_uuid, name),
 	CONSTRAINT events_code_unique UNIQUE (event_code),
 	CONSTRAINT events_users_fk FOREIGN KEY (user_uuid) REFERENCES public.users(user_uuid) ON UPDATE CASCADE
 );

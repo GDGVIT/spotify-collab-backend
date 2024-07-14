@@ -1,0 +1,1 @@
+DROP TABLE IF EXISTS public.events_playlists_mapping;
