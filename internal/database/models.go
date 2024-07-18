@@ -18,13 +18,6 @@ type Event struct {
 	EventCode string             `json:"event_code"`
 }
 
-type EventConfig struct {
-	EventUuid       uuid.UUID `json:"event_uuid"`
-	Explicit        bool      `json:"explicit"`
-	RequireApproval bool      `json:"require_approval"`
-	MaxSong         int32     `json:"max_song"`
-}
-
 type EventsPlaylistsMapping struct {
 	EventUuid    uuid.UUID `json:"event_uuid"`
 	PlaylistUuid uuid.UUID `json:"playlist_uuid"`
@@ -39,10 +32,17 @@ type Playlist struct {
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
 }
 
+type PlaylistConfig struct {
+	PlaylistUuid    uuid.UUID `json:"playlist_uuid"`
+	Explicit        bool      `json:"explicit"`
+	RequireApproval bool      `json:"require_approval"`
+	MaxSong         int32     `json:"max_song"`
+}
+
 type Song struct {
-	SongUri    string `json:"song_uri"`
-	PlaylistID string `json:"playlist_id"`
-	Count      int32  `json:"count"`
+	SongUri      string    `json:"song_uri"`
+	PlaylistUuid uuid.UUID `json:"playlist_uuid"`
+	Count        int32     `json:"count"`
 }
 
 type Token struct {

@@ -7,23 +7,25 @@ package database
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const addSong = `-- name: AddSong :one
-INSERT INTO songs (song_uri, playlist_id)
+INSERT INTO songs (song_uri, playlist_uuid)
 VALUES ($1, $2)
-RETURNING song_uri, playlist_id, count
+RETURNING song_uri, playlist_uuid, count
 `
 
 type AddSongParams struct {
-	SongUri    string `json:"song_uri"`
-	PlaylistID string `json:"playlist_id"`
+	SongUri      string    `json:"song_uri"`
+	PlaylistUuid uuid.UUID `json:"playlist_uuid"`
 }
 
 func (q *Queries) AddSong(ctx context.Context, arg AddSongParams) (Song, error) {
-	row := q.db.QueryRow(ctx, addSong, arg.SongUri, arg.PlaylistID)
+	row := q.db.QueryRow(ctx, addSong, arg.SongUri, arg.PlaylistUuid)
 	var i Song
-	err := row.Scan(&i.SongUri, &i.PlaylistID, &i.Count)
+	err := row.Scan(&i.SongUri, &i.PlaylistUuid, &i.Count)
 	return i, err
 }
 
@@ -52,13 +54,13 @@ func (q *Queries) DeleteSong(ctx context.Context, songUri string) error {
 }
 
 const getAllSongs = `-- name: GetAllSongs :many
-SELECT song_uri, playlist_id, count 
+SELECT song_uri, playlist_uuid, count 
 FROM songs
-WHERE playlist_id = $1
+WHERE playlist_uuid = $1
 `
 
-func (q *Queries) GetAllSongs(ctx context.Context, playlistID string) ([]Song, error) {
-	rows, err := q.db.Query(ctx, getAllSongs, playlistID)
+func (q *Queries) GetAllSongs(ctx context.Context, playlistUuid uuid.UUID) ([]Song, error) {
+	rows, err := q.db.Query(ctx, getAllSongs, playlistUuid)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +68,7 @@ func (q *Queries) GetAllSongs(ctx context.Context, playlistID string) ([]Song, e
 	var items []Song
 	for rows.Next() {
 		var i Song
-		if err := rows.Scan(&i.SongUri, &i.PlaylistID, &i.Count); err != nil {
+		if err := rows.Scan(&i.SongUri, &i.PlaylistUuid, &i.Count); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

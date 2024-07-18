@@ -1,12 +1,12 @@
 -- name: AddSong :one
-INSERT INTO songs (song_uri, playlist_id)
+INSERT INTO songs (song_uri, playlist_uuid)
 VALUES ($1, $2)
 RETURNING *;
 
 -- name: GetAllSongs :many
 SELECT * 
 FROM songs
-WHERE playlist_id = $1;
+WHERE playlist_uuid = $1;
 
 -- name: IncreaseSongCount :one
 UPDATE songs
