@@ -8,6 +8,7 @@ var errorType = struct {
 	ServiceUnavailable string
 	Forbidden          string
 	Downstream         string
+	NotFound           string
 }{
 	validation:         "validation",
 	server:             "server",
@@ -16,4 +17,5 @@ var errorType = struct {
 	ServiceUnavailable: "service unavailable",
 	Forbidden:          "forbidden",
 	Downstream:         "downstream",
+	NotFound:           "not found",
 }
