@@ -15,6 +15,12 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.POST("/events/new", s.eventHandler.CreateEvent)
 
+	r.POST("/playlists", s.playlistHandler.CreatePlaylist)
+	r.GET("/playlists", s.playlistHandler.ListPlaylists)
+	r.GET("/playlists/:id", s.playlistHandler.GetPlaylist)
+	r.PATCH("/playlists/:id", s.playlistHandler.UpdatePlaylist)
+	r.DELETE("/playlists/:id", s.playlistHandler.DeletePlaylist)
+
 	r.POST("/songs/new", s.songHandler.AddSongToEvent)
 
 	return r

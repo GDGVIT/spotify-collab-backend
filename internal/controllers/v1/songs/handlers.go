@@ -30,24 +30,16 @@ func (s *SongHandler) AddSongToEvent(c *gin.Context) {
 	q := database.New(s.db)
 	event, err := q.GetEventUUIDByCode(c, req.EventCode)
 	if errors.Is(sql.ErrNoRows, err) {
-		c.JSON(http.StatusNotFound, gin.H{
-			"msg": "event not found",
-		})
+		merrors.NotFound(c, "Event not found")
 	} else if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg": err,
-		})
+		merrors.InternalServer(c, err.Error())
 	}
 
 	playlist, err := q.GetPlaylistUUIDByEventUUID(c, event)
 	if errors.Is(sql.ErrNoRows, err) {
-		c.JSON(http.StatusNotFound, gin.H{
-			"msg": "no playlist found",
-		})
+		merrors.NotFound(c, "no playlist found")
 	} else if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg": err,
-		})
+		merrors.InternalServer(c, err.Error())
 	}
 
 	// TODO: Check if valid song, passes config -> not greater than count, not blacklisted, other configs
@@ -56,9 +48,7 @@ func (s *SongHandler) AddSongToEvent(c *gin.Context) {
 		PlaylistUuid: playlist,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"msg": err,
-		})
+		merrors.InternalServer(c, err.Error())
 	}
 
 	c.JSON(http.StatusOK, gin.H{

@@ -1,9 +1,12 @@
 package playlists
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
 	"spotify-collab/internal/database"
 	"spotify-collab/internal/merrors"
+	"spotify-collab/internal/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -71,12 +74,19 @@ func (p *PlaylistHandler) ListPlaylists(c *gin.Context) {
 
 	q := database.New(p.db)
 	playlists, err := q.ListPlaylists(c, req.UserUUID)
-	if err != nil {
+	if errors.Is(sql.ErrNoRows, err) {
+		merrors.NotFound(c, "No Playlists exist!")
+	} else if err != nil {
 		merrors.InternalServer(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, playlists)
+	c.JSON(http.StatusOK, utils.BaseResponse{
+		Success:    true,
+		Message:    "Playlists successfully retrieved",
+		Data:       playlists,
+		StatusCode: http.StatusOK,
+	})
 }
 
 func (p *PlaylistHandler) GetPlaylist(c *gin.Context) {
@@ -87,16 +97,20 @@ func (p *PlaylistHandler) GetPlaylist(c *gin.Context) {
 	}
 
 	q := database.New(p.db)
-	playlist, err := q.GetPlaylist(c, database.GetPlaylistParams{
-		UserUuid:     req.UserUUID,
-		PlaylistUuid: req.PlaylistUUID,
-	})
-	if err != nil {
+	playlist, err := q.GetPlaylist(c, req.PlaylistUUID)
+	if errors.Is(sql.ErrNoRows, err) {
+		merrors.NotFound(c, "Playlist not found")
+	} else if err != nil {
 		merrors.InternalServer(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, playlist)
+	c.JSON(http.StatusOK, utils.BaseResponse{
+		Success:    true,
+		Message:    "Playlist successfully retrieved",
+		Data:       playlist,
+		StatusCode: http.StatusOK,
+	})
 }
 
 func (p *PlaylistHandler) UpdatePlaylist(c *gin.Context) {
@@ -109,7 +123,6 @@ func (p *PlaylistHandler) UpdatePlaylist(c *gin.Context) {
 	q := database.New(p.db)
 	playlist, err := q.UpdatePlaylistName(c, database.UpdatePlaylistNameParams{
 		Name:         req.Name,
-		UserUuid:     req.UserUUID,
 		PlaylistUuid: req.PlaylistUUID,
 	})
 	if err != nil {
@@ -117,7 +130,12 @@ func (p *PlaylistHandler) UpdatePlaylist(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, playlist)
+	c.JSON(http.StatusOK, utils.BaseResponse{
+		Success:    true,
+		Message:    "Playlist successfully updated",
+		Data:       playlist,
+		StatusCode: http.StatusOK,
+	})
 }
 
 func (p *PlaylistHandler) DeletePlaylist(c *gin.Context) {
@@ -128,17 +146,18 @@ func (p *PlaylistHandler) DeletePlaylist(c *gin.Context) {
 	}
 
 	q := database.New(p.db)
-	err = q.DeletePlaylist(c, database.DeletePlaylistParams{
-		UserUuid:     req.UserUUID,
-		PlaylistUuid: req.PlaylistUUID,
-	})
-	if err != nil {
+	rows, err := q.DeletePlaylist(c, req.PlaylistUUID)
+	if rows == 0 {
+		merrors.NotFound(c, "Playlist not found")
+	} else if err != nil {
 		merrors.InternalServer(c, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Object successfully deleted",
+	c.JSON(http.StatusOK, utils.BaseResponse{
+		Success:    true,
+		Message:    "Playlist successfully deleted",
+		StatusCode: http.StatusOK,
 	})
 }
 
@@ -179,6 +198,11 @@ func (p *PlaylistHandler) UpdateConfigurationReq(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, config)
+	c.JSON(http.StatusOK, utils.BaseResponse{
+		Success:    true,
+		Message:    "Configuration successfully updated",
+		Data:       config,
+		StatusCode: http.StatusOK,
+	})
 
 }

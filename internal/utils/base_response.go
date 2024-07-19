@@ -5,7 +5,7 @@ type BaseResponse struct {
 	Message    string      `json:"message,omitempty"`
 	Data       interface{} `json:"data,omitempty"`
 	MetaData   interface{} `json:"metadata,omitempty"`
-	Error      Error       `json:"error,omitempty"`
+	Error      *Error      `json:"error,omitempty"`
 	StatusCode int         `json:"status_code,omitempty"`
 }
 

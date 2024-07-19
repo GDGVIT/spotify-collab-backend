@@ -12,18 +12,15 @@ type ListPlaylistsReq struct {
 }
 
 type GetPlaylistReq struct {
-	UserUUID     uuid.UUID `json:"user_uuid"`
 	PlaylistUUID uuid.UUID `json:"playlist_uuid"`
 }
 
 type UpdatePlaylistReq struct {
-	UserUUID     uuid.UUID `json:"user_uuid"`
 	PlaylistUUID uuid.UUID `json:"playlist_uuid"`
 	Name         string    `json:"name"`
 }
 
 type DeletePlaylistReq struct {
-	UserUUID     uuid.UUID `json:"user_uuid"`
 	PlaylistUUID uuid.UUID `json:"playlist_uuid"`
 }
 
