@@ -14,6 +14,8 @@ import (
 const addSong = `-- name: AddSong :one
 INSERT INTO songs (song_uri, playlist_uuid)
 VALUES ($1, $2)
+ON CONFLICT ON CONSTRAINT songs_pk
+DO UPDATE SET count = count + 1
 RETURNING song_uri, playlist_uuid, count
 `
 
@@ -29,37 +31,74 @@ func (q *Queries) AddSong(ctx context.Context, arg AddSongParams) (Song, error) 
 	return i, err
 }
 
-const decreaseSongCount = `-- name: DecreaseSongCount :one
+const blacklistSong = `-- name: BlacklistSong :execrows
 UPDATE songs
-SET count = count - 1
-WHERE song_uri = $1
-RETURNING count
+SET count = -1
+WHERE song_uri = $1 AND playlist_uuid = $2
+RETURNING song_uri, playlist_uuid, count
 `
 
-func (q *Queries) DecreaseSongCount(ctx context.Context, songUri string) (int32, error) {
-	row := q.db.QueryRow(ctx, decreaseSongCount, songUri)
-	var count int32
-	err := row.Scan(&count)
-	return count, err
+type BlacklistSongParams struct {
+	SongUri      string    `json:"song_uri"`
+	PlaylistUuid uuid.UUID `json:"playlist_uuid"`
 }
 
-const deleteSong = `-- name: DeleteSong :execrows
-DELETE FROM songs
-WHERE song_uri = $1
-`
-
-func (q *Queries) DeleteSong(ctx context.Context, songUri string) (int64, error) {
-	result, err := q.db.Exec(ctx, deleteSong, songUri)
+func (q *Queries) BlacklistSong(ctx context.Context, arg BlacklistSongParams) (int64, error) {
+	result, err := q.db.Exec(ctx, blacklistSong, arg.SongUri, arg.PlaylistUuid)
 	if err != nil {
 		return 0, err
 	}
 	return result.RowsAffected(), nil
 }
 
+const deleteBlacklist = `-- name: DeleteBlacklist :execrows
+DELETE FROM songs
+WHERE song_uri = $1 AND playlist_uuid = $2 and count = -1
+`
+
+type DeleteBlacklistParams struct {
+	SongUri      string    `json:"song_uri"`
+	PlaylistUuid uuid.UUID `json:"playlist_uuid"`
+}
+
+func (q *Queries) DeleteBlacklist(ctx context.Context, arg DeleteBlacklistParams) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteBlacklist, arg.SongUri, arg.PlaylistUuid)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const getAllBlacklisted = `-- name: GetAllBlacklisted :many
+SELECT song_uri, playlist_uuid, count
+FROM songs
+WHERE playlist_uuid = $1 AND count = -1
+`
+
+func (q *Queries) GetAllBlacklisted(ctx context.Context, playlistUuid uuid.UUID) ([]Song, error) {
+	rows, err := q.db.Query(ctx, getAllBlacklisted, playlistUuid)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Song
+	for rows.Next() {
+		var i Song
+		if err := rows.Scan(&i.SongUri, &i.PlaylistUuid, &i.Count); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAllSongs = `-- name: GetAllSongs :many
 SELECT song_uri, playlist_uuid, count 
 FROM songs
-WHERE playlist_uuid = $1
+WHERE playlist_uuid = $1 AND count != -1
 `
 
 func (q *Queries) GetAllSongs(ctx context.Context, playlistUuid uuid.UUID) ([]Song, error) {
@@ -80,18 +119,4 @@ func (q *Queries) GetAllSongs(ctx context.Context, playlistUuid uuid.UUID) ([]So
 		return nil, err
 	}
 	return items, nil
-}
-
-const increaseSongCount = `-- name: IncreaseSongCount :one
-UPDATE songs
-SET count = count + 1
-WHERE song_uri = $1
-RETURNING count
-`
-
-func (q *Queries) IncreaseSongCount(ctx context.Context, songUri string) (int32, error) {
-	row := q.db.QueryRow(ctx, increaseSongCount, songUri)
-	var count int32
-	err := row.Scan(&count)
-	return count, err
 }
