@@ -20,6 +20,6 @@ SET count = count - 1
 WHERE song_uri = $1
 RETURNING count;
 
--- name: DeleteSong :exec
+-- name: DeleteSong :execrows
 DELETE FROM songs
 WHERE song_uri = $1;

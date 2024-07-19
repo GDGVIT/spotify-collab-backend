@@ -37,19 +37,17 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 	return i, err
 }
 
-const deleteEvent = `-- name: DeleteEvent :exec
+const deleteEvent = `-- name: DeleteEvent :execrows
 DELETE FROM events
-WHERE user_uuid = $1 AND event_uuid = $2
+WHERE event_uuid = $1
 `
 
-type DeleteEventParams struct {
-	UserUuid  uuid.UUID `json:"user_uuid"`
-	EventUuid uuid.UUID `json:"event_uuid"`
-}
-
-func (q *Queries) DeleteEvent(ctx context.Context, arg DeleteEventParams) error {
-	_, err := q.db.Exec(ctx, deleteEvent, arg.UserUuid, arg.EventUuid)
-	return err
+func (q *Queries) DeleteEvent(ctx context.Context, eventUuid uuid.UUID) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteEvent, eventUuid)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const getAllEvents = `-- name: GetAllEvents :many
@@ -88,16 +86,11 @@ func (q *Queries) GetAllEvents(ctx context.Context, userUuid uuid.UUID) ([]Event
 const getEvent = `-- name: GetEvent :one
 SELECT user_uuid, event_uuid, created_at, updated_at, name, event_code
 FROM events
-WHERE user_uuid = $1 AND event_uuid = $2
+WHERE event_uuid = $1
 `
 
-type GetEventParams struct {
-	UserUuid  uuid.UUID `json:"user_uuid"`
-	EventUuid uuid.UUID `json:"event_uuid"`
-}
-
-func (q *Queries) GetEvent(ctx context.Context, arg GetEventParams) (Event, error) {
-	row := q.db.QueryRow(ctx, getEvent, arg.UserUuid, arg.EventUuid)
+func (q *Queries) GetEvent(ctx context.Context, eventUuid uuid.UUID) (Event, error) {
+	row := q.db.QueryRow(ctx, getEvent, eventUuid)
 	var i Event
 	err := row.Scan(
 		&i.UserUuid,
@@ -139,18 +132,17 @@ func (q *Queries) GetEventUUIDByName(ctx context.Context, name string) (uuid.UUI
 const updateEventName = `-- name: UpdateEventName :one
 UPDATE events
 SET name = $1
-WHERE user_uuid = $2 AND event_uuid = $3
+WHERE event_uuid = $2
 RETURNING user_uuid, event_uuid, created_at, updated_at, name, event_code
 `
 
 type UpdateEventNameParams struct {
 	Name      string    `json:"name"`
-	UserUuid  uuid.UUID `json:"user_uuid"`
 	EventUuid uuid.UUID `json:"event_uuid"`
 }
 
 func (q *Queries) UpdateEventName(ctx context.Context, arg UpdateEventNameParams) (Event, error) {
-	row := q.db.QueryRow(ctx, updateEventName, arg.Name, arg.UserUuid, arg.EventUuid)
+	row := q.db.QueryRow(ctx, updateEventName, arg.Name, arg.EventUuid)
 	var i Event
 	err := row.Scan(
 		&i.UserUuid,

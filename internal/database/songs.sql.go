@@ -43,14 +43,17 @@ func (q *Queries) DecreaseSongCount(ctx context.Context, songUri string) (int32,
 	return count, err
 }
 
-const deleteSong = `-- name: DeleteSong :exec
+const deleteSong = `-- name: DeleteSong :execrows
 DELETE FROM songs
 WHERE song_uri = $1
 `
 
-func (q *Queries) DeleteSong(ctx context.Context, songUri string) error {
-	_, err := q.db.Exec(ctx, deleteSong, songUri)
-	return err
+func (q *Queries) DeleteSong(ctx context.Context, songUri string) (int64, error) {
+	result, err := q.db.Exec(ctx, deleteSong, songUri)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const getAllSongs = `-- name: GetAllSongs :many
