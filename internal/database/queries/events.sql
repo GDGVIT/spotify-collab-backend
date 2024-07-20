@@ -11,7 +11,7 @@ WHERE user_uuid = $1;
 -- name: GetEvent :one
 SELECT *
 FROM events
-WHERE user_uuid = $1 AND event_uuid = $2;
+WHERE event_uuid = $1;
 
 -- name: GetEventUUIDByName :one
 SELECT event_uuid
@@ -26,9 +26,9 @@ WHERE event_code = $1;
 -- name: UpdateEventName :one
 UPDATE events
 SET name = $1
-WHERE user_uuid = $2 AND event_uuid = $3
+WHERE event_uuid = $2
 RETURNING *;
 
--- name: DeleteEvent :exec
+-- name: DeleteEvent :execrows
 DELETE FROM events
-WHERE user_uuid = $1 AND event_uuid = $2;
+WHERE event_uuid = $1;

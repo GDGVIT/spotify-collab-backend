@@ -1,5 +1,25 @@
 # Project spotify-collab
 
+## Todo(Aditya)
+- [ ] Fix the database initialisation mess
+- [ ] Separate handlers and services
+- [x] Add the base response and utils for error returns
+- [x] Add Event Configuration tables (settings, active playlist)
+  - [ ] Check if we wanna allow multiple playlists per event - look into cyclic dependancies? or maybe just make a join table or something
+- [ ] Triggers for updated at
+- [ ] Default playlist when creating event.
+- [ ] Separate the handlers, and the input validators.
+- [ ] Generation of event codes along with re-try in case they fail due to unique constraint.
+- [ ] Error check for name already existing - 422
+- [ ] Endpoints
+  - [ ] Blacklist song
+  - [x] Create Event
+  - [ ] RUD Event
+  - [x] Add song to event (user)
+  - [ ] CRUD playlist
+  - [ ] If approval required -> Check approval for songs (admin side)
+  - [ ] Default configuration and updated configuration
+
 ## Getting Started
 1. Create a psql database, edit the appropriate values in .env.example and rename to .env
 2. In makefile, under db/migrations/up and /down commands, edit the dsn of the db to match your own.

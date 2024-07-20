@@ -20,7 +20,7 @@ func Validation(ctx *gin.Context, err string) {
 	smerror.Type = errorType.validation
 	smerror.Message = err
 
-	res.Error = smerror
+	res.Error = &smerror
 
 	ctx.JSON(errorCode, res)
 	ctx.Abort()
