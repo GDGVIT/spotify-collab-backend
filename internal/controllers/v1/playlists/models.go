@@ -30,3 +30,8 @@ type UpdateConfigurationReq struct {
 	RequireApproval *bool     `json:"require_approval"`
 	MaxSong         *int32    `json:"max_songs"`
 }
+
+// type CreatePlaylistReq struct {
+// 	PlaylistName 	string 	  `json:"playlist_name"`
+	
+// }

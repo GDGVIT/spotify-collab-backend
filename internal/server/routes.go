@@ -22,6 +22,9 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.DELETE("/playlists/:id", s.playlistHandler.DeletePlaylist)
 
 	r.POST("/songs/new", s.songHandler.AddSongToEvent)
+	
+	// Route needs to be changed
+	r.POST("/songs/add", s.songHandler.AddSongToPlaylist)
 
 	return r
 }
