@@ -25,6 +25,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	
 	// Route needs to be changed
 	r.POST("/songs/add", s.songHandler.AddSongToPlaylist)
+	r.POST("/playlists/add", s.playlistHandler.CreatePlaylistSpotify)
 
 	return r
 }

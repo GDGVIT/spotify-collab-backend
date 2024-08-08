@@ -213,7 +213,6 @@ func (s *SongHandler) AddSongToPlaylist(c *gin.Context) {
 	}
 	defer resp.Body.Close()
 
-	// Debug: Print the response status and body for further analysis
 	responseBody, _ := io.ReadAll(resp.Body)
 	fmt.Println("Response Status:", resp.Status)
 	fmt.Println("Response Body:", string(responseBody))

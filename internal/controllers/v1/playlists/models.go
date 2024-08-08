@@ -31,7 +31,20 @@ type UpdateConfigurationReq struct {
 	MaxSong         *int32    `json:"max_songs"`
 }
 
-// type CreatePlaylistReq struct {
-// 	PlaylistName 	string 	  `json:"playlist_name"`
-	
-// }
+type CreatePlaylistSpotifyReq struct {
+	PlaylistName 	string 	  `json:"playlist_name"`
+	IsPublic		bool	  `json:"is_public"`
+	IsCollaborative	bool	  `json:"is_collaborative"`
+	Description		string	  `json:"description"`
+
+	AccessToken		string	  `json:"access_token"`
+	// UserID 			string	  `json:"user_id"`
+}
+
+type CreatePlaylistSpotifyReqBody struct {
+
+	PlaylistName 	string 	  `json:"name"`
+	IsPublic		bool	  `json:"public"`
+	IsCollaborative	bool	  `json:"collaborative"`
+	Description		string	  `json:"description"`
+}
