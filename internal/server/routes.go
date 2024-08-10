@@ -36,6 +36,10 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.GET("/songs/blacklist", s.songHandler.GetBlacklistedSongs)
 	r.DELETE("/songs/blacklist", s.songHandler.DeleteBlacklistSong)
 
+	// Route needs to be changed
+	r.POST("/songs/add", s.songHandler.AddSongToPlaylist)
+	r.POST("/playlists/add", s.playlistHandler.CreatePlaylistSpotify)
+
 	return r
 }
 

@@ -21,3 +21,12 @@ func validateGetAllSongsReq(c *gin.Context) (GetAllSongsReq, error) {
 	err := c.ShouldBindJSON(req)
 	return req, err
 }
+
+func validateAddSongToPlaylist(c *gin.Context) (*AddSongToPlaylistReq, error) {
+    var req AddSongToPlaylistReq
+    if err := c.ShouldBindJSON(&req); err != nil {
+        return nil, err
+    }
+    return &req, nil
+}
+
