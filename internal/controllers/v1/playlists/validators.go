@@ -34,3 +34,9 @@ func validateUpdateConfigurationReq(c *gin.Context) (UpdateConfigurationReq, err
 	err := c.ShouldBindJSON(&req)
 	return req, err
 }
+
+func validateCreatePlaylistSpotifyReq(c *gin.Context) (CreatePlaylistSpotifyReq, error) {
+	var req CreatePlaylistSpotifyReq
+	err := c.ShouldBindJSON(&req)
+	return req, err
+}

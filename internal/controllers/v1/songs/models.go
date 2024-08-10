@@ -15,3 +15,15 @@ type BlacklistSongReq struct {
 type GetAllSongsReq struct {
 	PlaylistUUID uuid.UUID `json:"playlist_uuid"`
 }
+
+type AddSongToPlaylistReq struct {
+	SongURIList []string `json:"uris"`
+
+	// temporary pass playlist id and access token
+	PlaylistID string `json:"playlist_id"`
+	AccessToken string `json:"access_token"`
+}
+
+type RequestBody struct {
+	Uris []string `json:"uris"`
+}

@@ -1,8 +1,12 @@
 package songs
 
 import (
+	"bytes"
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"spotify-collab/internal/database"
 	"spotify-collab/internal/merrors"
@@ -156,4 +160,76 @@ func (s *SongHandler) DeleteBlacklistSong(c *gin.Context) {
 		Message:    "Song removed from blacklist",
 		StatusCode: http.StatusOK,
 	})
+}
+
+func (s *SongHandler) AddSongToPlaylist(c *gin.Context) {
+	req, err := validateAddSongToPlaylist(c)
+	if err != nil {
+		merrors.Validation(c, err.Error())
+		return
+	}
+
+	if req.AccessToken == "" {
+		merrors.Validation(c, "Access token is required")
+		return
+	}
+
+	if req.PlaylistID == "" {
+		merrors.Validation(c, "Playlist ID is required")
+		return
+	}
+
+	if len(req.SongURIList) == 0 {
+		merrors.Validation(c, "At least one song URI is required")
+		return
+	}
+
+	requestBody := RequestBody{Uris: req.SongURIList}
+	body, err := json.Marshal(requestBody)
+	if err != nil {
+		fmt.Println("Error marshaling request body:", err)
+		return
+	}
+
+	fmt.Println("Request Body:", string(body))
+
+	url := fmt.Sprintf("https://api.spotify.com/v1/playlists/%s/tracks", req.PlaylistID)
+
+	spotifyReq, err := http.NewRequest("POST", url, bytes.NewBuffer(body))
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return
+	}
+
+	// Set headers
+	spotifyReq.Header.Set("Authorization", "Bearer "+req.AccessToken)
+	spotifyReq.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(spotifyReq)
+	if err != nil {
+		fmt.Println("Error making request:", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	responseBody, _ := io.ReadAll(resp.Body)
+	fmt.Println("Response Status:", resp.Status)
+	fmt.Println("Response Body:", string(responseBody))
+
+	if resp.StatusCode == http.StatusOK {
+		var responseBodyMap map[string]interface{}
+		err := json.NewDecoder(bytes.NewBuffer(responseBody)).Decode(&responseBodyMap)
+		if err != nil {
+			fmt.Println("Error decoding response body:", err)
+			return
+		}
+
+		snapshotID := responseBodyMap["snapshot_id"].(string)
+		fmt.Println("Added!!\n", snapshotID)
+	} else if resp.StatusCode == http.StatusUnauthorized {
+		fmt.Println("Error: Unauthorized - Invalid or expired access token")
+	} else {
+		fmt.Println("Error:", resp.Status, string(responseBody))
+	}
 }
