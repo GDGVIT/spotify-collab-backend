@@ -1,7 +1,6 @@
 package playlists
 
 import (
-	"database/sql"
 	"errors"
 	"net/http"
 	"spotify-collab/internal/database"
@@ -9,6 +8,8 @@ import (
 	"spotify-collab/internal/utils"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -57,6 +58,7 @@ func (p *PlaylistHandler) CreatePlaylist(c *gin.Context) {
 	err = tx.Commit(c)
 	if err != nil {
 		merrors.InternalServer(c, err.Error())
+		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -74,8 +76,9 @@ func (p *PlaylistHandler) ListPlaylists(c *gin.Context) {
 
 	q := database.New(p.db)
 	playlists, err := q.ListPlaylists(c, req.UserUUID)
-	if errors.Is(sql.ErrNoRows, err) {
+	if len(playlists) == 0 {
 		merrors.NotFound(c, "No Playlists exist!")
+		return
 	} else if err != nil {
 		merrors.InternalServer(c, err.Error())
 		return
@@ -98,8 +101,9 @@ func (p *PlaylistHandler) GetPlaylist(c *gin.Context) {
 
 	q := database.New(p.db)
 	playlist, err := q.GetPlaylist(c, req.PlaylistUUID)
-	if errors.Is(sql.ErrNoRows, err) {
+	if errors.Is(pgx.ErrNoRows, err) {
 		merrors.NotFound(c, "Playlist not found")
+		return
 	} else if err != nil {
 		merrors.InternalServer(c, err.Error())
 		return
@@ -125,7 +129,10 @@ func (p *PlaylistHandler) UpdatePlaylist(c *gin.Context) {
 		Name:         req.Name,
 		PlaylistUuid: req.PlaylistUUID,
 	})
-	if err != nil {
+	if errors.Is(pgx.ErrNoRows, err) {
+		merrors.NotFound(c, "Playlist not found")
+		return
+	} else if err != nil {
 		merrors.InternalServer(c, err.Error())
 		return
 	}
@@ -149,6 +156,7 @@ func (p *PlaylistHandler) DeletePlaylist(c *gin.Context) {
 	rows, err := q.DeletePlaylist(c, req.PlaylistUUID)
 	if rows == 0 {
 		merrors.NotFound(c, "Playlist not found")
+		return
 	} else if err != nil {
 		merrors.InternalServer(c, err.Error())
 		return
@@ -161,9 +169,10 @@ func (p *PlaylistHandler) DeletePlaylist(c *gin.Context) {
 	})
 }
 
-func (p *PlaylistHandler) UpdateConfigurationReq(c *gin.Context) {
+func (p *PlaylistHandler) UpdateConfiguration(c *gin.Context) {
 	req, err := validateUpdateConfigurationReq(c)
 	if err != nil {
+		binding.EnableDecoderDisallowUnknownFields = true
 		merrors.Validation(c, err.Error())
 		return
 	}
@@ -181,15 +190,15 @@ func (p *PlaylistHandler) UpdateConfigurationReq(c *gin.Context) {
 	if req.RequireApproval == nil {
 		req.RequireApproval = &config.RequireApproval
 	}
-	if req.MaxSong == nil {
-		req.MaxSong = &config.MaxSong
+	if req.MaxSong == 0 {
+		req.MaxSong = config.MaxSong
 	}
 
 	params := database.UpdateConfigurationParams{
 		PlaylistUuid:    req.PlaylistUUID,
 		Explicit:        *req.Explicit,
 		RequireApproval: *req.RequireApproval,
-		MaxSong:         *req.MaxSong,
+		MaxSong:         req.MaxSong,
 	}
 
 	config, err = q.UpdateConfiguration(c, params)

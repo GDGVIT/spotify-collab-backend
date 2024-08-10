@@ -5,20 +5,22 @@
 - [ ] Separate handlers and services
 - [x] Add the base response and utils for error returns
 - [x] Add Event Configuration tables (settings, active playlist)
-  - [ ] Check if we wanna allow multiple playlists per event - look into cyclic dependancies? or maybe just make a join table or something
 - [ ] Triggers for updated at
-- [ ] Default playlist when creating event.
-- [ ] Separate the handlers, and the input validators.
+- [x] Default playlist when creating event.
+- [x] Separate the handlers, and the input validators.
 - [ ] Generation of event codes along with re-try in case they fail due to unique constraint.
-- [ ] Error check for name already existing - 422
 - [ ] Endpoints
-  - [ ] Blacklist song
-  - [x] Create Event
-  - [ ] RUD Event
-  - [x] Add song to event (user)
-  - [ ] CRUD playlist
+  - [x] Blacklist/Remove Blacklist song
+  - [x] CRUD Event
+  - [x] Add song to playlist (user)
+  - [x] CRUD playlist
   - [ ] If approval required -> Check approval for songs (admin side)
-  - [ ] Default configuration and updated configuration
+  - [x] Default configuration and updated configuration
+    - [ ] Validation for configuration - can't change to non-explicit if already one exists, max_songs must be 1 or more
+  - [ ] Error check for value already existing - 422
+- [ ] Auth
+- [x] Integration with the API
+- [ ] 
 
 ## Getting Started
 1. Create a psql database, edit the appropriate values in .env.example and rename to .env
