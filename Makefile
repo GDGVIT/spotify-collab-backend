@@ -56,14 +56,14 @@ db/migrations/new:
 db/migrations/up:
 	@echo 'Running Up migrations...'
 
-	migrate -path=./internal/database/migrations -database postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable up
+	migrate -path=./internal/database/migrations -database postgres://postgres:root@localhost:5432/spotifycollab?sslmode=disable up
 
 	
 ## db/migrations/down: apply all database down migrations
 .PHONY: db/migrations/down
 db/migrations/down:
 	@echo 'Running Down migrations...'
-	migrate -path=./internal/database/migrations -database postgresql://postgres:postgres@localhost:5432/postgres?sslmode=disable down
+	migrate -path=./internal/database/migrations -database postgres://postgres:root@localhost:5432/spotifycollab?sslmode=disable down
 
 
 .PHONY: all build run test clean

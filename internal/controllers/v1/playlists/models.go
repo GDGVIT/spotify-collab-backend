@@ -12,39 +12,38 @@ type ListPlaylistsReq struct {
 }
 
 type GetPlaylistReq struct {
-	PlaylistUUID uuid.UUID `json:"playlist_uuid" binding:"required"`
+	PlaylistUUID string `json:"playlist_uuid" binding:"required,uuid" uri:"id"`
 }
 
 type UpdatePlaylistReq struct {
-	PlaylistUUID uuid.UUID `json:"playlist_uuid" binding:"required"`
+	PlaylistUUID string `binding:"required,uuid" uri:"id"`
 	Name         string    `json:"name" binding:"required"`
 }
 
 type DeletePlaylistReq struct {
-	PlaylistUUID uuid.UUID `json:"playlist_uuid" binding:"required"`
+	PlaylistUUID string `json:"playlist_uuid" binding:"required,uuid" uri:"id"`
 }
 
 type UpdateConfigurationReq struct {
 	PlaylistUUID    uuid.UUID `json:"playlist_uuid" binding:"required"`
 	Explicit        *bool     `json:"explicit"`
 	RequireApproval *bool     `json:"require_approval"`
-	MaxSong         int32    `json:"max_song"`
+	MaxSong         int32     `json:"max_song"`
 }
 
 type CreatePlaylistSpotifyReq struct {
-	PlaylistName 	string 	  `json:"playlist_name"`
-	IsPublic		bool	  `json:"is_public"`
-	IsCollaborative	bool	  `json:"is_collaborative"`
-	Description		string	  `json:"description"`
+	PlaylistName    string `json:"playlist_name"`
+	IsPublic        bool   `json:"is_public"`
+	IsCollaborative bool   `json:"is_collaborative"`
+	Description     string `json:"description"`
 
-	AccessToken		string	  `json:"access_token"`
+	AccessToken string `json:"access_token"`
 	// UserID 			string	  `json:"user_id"`
 }
 
 type CreatePlaylistSpotifyReqBody struct {
-
-	PlaylistName 	string 	  `json:"name"`
-	IsPublic		bool	  `json:"public"`
-	IsCollaborative	bool	  `json:"collaborative"`
-	Description		string	  `json:"description"`
+	PlaylistName    string `json:"name"`
+	IsPublic        bool   `json:"public"`
+	IsCollaborative bool   `json:"collaborative"`
+	Description     string `json:"description"`
 }

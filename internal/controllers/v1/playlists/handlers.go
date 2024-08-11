@@ -14,6 +14,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -45,10 +46,11 @@ func (p *PlaylistHandler) CreatePlaylist(c *gin.Context) {
 
 	// Generate Playlist from spotify
 	playlist, err := qtx.CreatePlaylist(c, database.CreatePlaylistParams{
-		PlaylistID: "",
+		PlaylistID: "f",
 		UserUuid:   req.UserUUID,
 		Name:       req.Name,
 	})
+	// Check name already exists
 	if err != nil {
 		merrors.InternalServer(c, err.Error())
 		return
@@ -103,9 +105,11 @@ func (p *PlaylistHandler) GetPlaylist(c *gin.Context) {
 		merrors.Validation(c, err.Error())
 		return
 	}
+	// No need for check err since binding checks uuid
+	uuid, _ := uuid.Parse(req.PlaylistUUID)
 
 	q := database.New(p.db)
-	playlist, err := q.GetPlaylist(c, req.PlaylistUUID)
+	playlist, err := q.GetPlaylist(c, uuid)
 	if errors.Is(pgx.ErrNoRows, err) {
 		merrors.NotFound(c, "Playlist not found")
 		return
@@ -128,11 +132,13 @@ func (p *PlaylistHandler) UpdatePlaylist(c *gin.Context) {
 		merrors.Validation(c, err.Error())
 		return
 	}
+	// No need for check err since binding checks uuid
+	uuid, _ := uuid.Parse(req.PlaylistUUID)
 
 	q := database.New(p.db)
 	playlist, err := q.UpdatePlaylistName(c, database.UpdatePlaylistNameParams{
 		Name:         req.Name,
-		PlaylistUuid: req.PlaylistUUID,
+		PlaylistUuid: uuid,
 	})
 	if errors.Is(pgx.ErrNoRows, err) {
 		merrors.NotFound(c, "Playlist not found")
@@ -156,9 +162,11 @@ func (p *PlaylistHandler) DeletePlaylist(c *gin.Context) {
 		merrors.Validation(c, err.Error())
 		return
 	}
+	// No need for check err since binding checks uuid
+	uuid, _ := uuid.Parse(req.PlaylistUUID)
 
 	q := database.New(p.db)
-	rows, err := q.DeletePlaylist(c, req.PlaylistUUID)
+	rows, err := q.DeletePlaylist(c, uuid)
 	if rows == 0 {
 		merrors.NotFound(c, "Playlist not found")
 		return
