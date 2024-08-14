@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"spotify-collab/internal/merrors"
+	"spotify-collab/internal/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -16,6 +18,8 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.GET("/", s.HelloWorldHandler)
 
 	r.GET("/health", s.healthHandler)
+	r.GET("/schema", s.schemaHandler)
+	r.GET("/test", s.testHandler)
 
 	r.POST("/events/new", s.eventHandler.CreateEvent)
 	r.GET("/events/list", s.eventHandler.ListEvents)
@@ -68,4 +72,123 @@ func (s *Server) healthHandler(c *gin.Context) {
 	stats["status"] = "up"
 	stats["message"] = "It's healthy"
 	c.JSON(http.StatusOK, stats)
+}
+
+func (s *Server) schemaHandler(c *gin.Context) {
+	data := gin.H{}
+
+	rows, err := s.db.Query(context.Background(), "SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname != 'pg_catalog' AND schemaname != 'information_schema'")
+	if err != nil {
+		merrors.InternalServer(c, err.Error())
+		return
+	}
+
+	defer rows.Close()
+	var tables []string
+	for rows.Next() {
+		var i string
+		if err := rows.Scan(
+			&i,
+		); err != nil {
+			merrors.InternalServer(c, err.Error())
+			return
+		}
+		tables = append(tables, i)
+	}
+	if err := rows.Err(); err != nil {
+		merrors.InternalServer(c, err.Error())
+		return
+	}
+	data["tables"] = tables
+
+	rows, err = s.db.Query(context.Background(), "select column_name from INFORMATION_SCHEMA.COLUMNS where table_name = 'users';")
+	if err != nil {
+		data["error"] = err.Error()
+		c.JSON(http.StatusInternalServerError, utils.BaseResponse{
+			Success:    true,
+			Data:       data,
+			StatusCode: http.StatusInternalServerError,
+		})
+		return
+	}
+
+	defer rows.Close()
+	var details []string
+	for rows.Next() {
+		var i string
+		if err := rows.Scan(
+			&i,
+		); err != nil {
+			data["error"] = err.Error()
+			c.JSON(http.StatusInternalServerError, utils.BaseResponse{
+				Success:    true,
+				Data:       data,
+				StatusCode: http.StatusInternalServerError,
+			})
+			return
+		}
+		details = append(details, i)
+	}
+	if err := rows.Err(); err != nil {
+		data["error"] = err.Error()
+		c.JSON(http.StatusInternalServerError, utils.BaseResponse{
+			Success:    true,
+			Data:       data,
+			StatusCode: http.StatusInternalServerError,
+		})
+		return
+	}
+	data["details"] = details
+
+	rows, err = s.db.Query(context.Background(), "select name from users;")
+	if err != nil {
+		data["error"] = err.Error()
+		c.JSON(http.StatusInternalServerError, utils.BaseResponse{
+			Success:    true,
+			Data:       data,
+			StatusCode: http.StatusInternalServerError,
+		})
+		return
+	}
+
+	defer rows.Close()
+	var users []string
+	for rows.Next() {
+		var i string
+		if err := rows.Scan(
+			&i,
+		); err != nil {
+			data["error"] = err.Error()
+			c.JSON(http.StatusInternalServerError, utils.BaseResponse{
+				Success:    true,
+				Data:       data,
+				StatusCode: http.StatusInternalServerError,
+			})
+			return
+		}
+		users = append(users, i)
+	}
+	if err := rows.Err(); err != nil {
+		data["error"] = err.Error()
+		c.JSON(http.StatusInternalServerError, utils.BaseResponse{
+			Success:    true,
+			Data:       data,
+			StatusCode: http.StatusInternalServerError,
+		})
+		return
+	}
+	data["users"] = users
+
+	c.JSON(http.StatusOK, utils.BaseResponse{
+		Success:    true,
+		Data:       data,
+		StatusCode: http.StatusOK,
+	})
+
+}
+
+func (s *Server) testHandler(c *gin.Context) {
+	var dbName, schemaName string
+	_ = s.db.QueryRow(context.Background(), "SELECT current_database(), current_schema()").Scan(&dbName, &schemaName)
+	log.Printf("Current DB: %s, Current Schema: %s\n", dbName, schemaName)
 }
