@@ -17,21 +17,23 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.GET("/health", s.healthHandler)
 
-	r.POST("/playlists", s.playlistHandler.CreatePlaylist)
-	r.GET("/playlists", s.playlistHandler.ListPlaylists)
-	r.GET("/playlists/:id", s.playlistHandler.GetPlaylist)
-	r.POST("/playlists/:id", s.playlistHandler.UpdatePlaylist)
-	r.DELETE("/playlists/:id", s.playlistHandler.DeletePlaylist)
+	v1 := r.Group("/v1")
 
-	r.POST("/songs/new", s.songHandler.AddSongToPlaylist)
-	r.POST("/songs/blacklist", s.songHandler.BlacklistSong)
-	r.GET("/songs/all", s.songHandler.GetAllSongs)
-	r.GET("/songs/blacklist", s.songHandler.GetBlacklistedSongs)
-	r.DELETE("/songs/blacklist", s.songHandler.DeleteBlacklistSong)
+	v1.POST("/playlists", s.playlistHandler.CreatePlaylist)
+	v1.GET("/playlists", s.playlistHandler.ListPlaylists)
+	v1.GET("/playlists/:id", s.playlistHandler.GetPlaylist)
+	v1.POST("/playlists/:id", s.playlistHandler.UpdatePlaylist)
+	v1.DELETE("/playlists/:id", s.playlistHandler.DeletePlaylist)
 
-	r.POST("/songs/add", s.songHandler.KaranAddSongToPlaylist)
+	v1.POST("/songs/new", s.songHandler.AddSongToPlaylist)
+	v1.POST("/songs/blacklist", s.songHandler.BlacklistSong)
+	v1.GET("/songs/all", s.songHandler.GetAllSongs)
+	v1.GET("/songs/blacklist", s.songHandler.GetBlacklistedSongs)
+	v1.DELETE("/songs/blacklist", s.songHandler.DeleteBlacklistSong)
 
-	auth := r.Group("/auth")
+	v1.POST("/songs/add", s.songHandler.KaranAddSongToPlaylist)
+
+	auth := v1.Group("/auth")
 	auth.GET("spotify/login", s.authHandler.SpotifyLogin)
 	auth.GET("spotify/callback", s.authHandler.SpotifyCallback)
 
