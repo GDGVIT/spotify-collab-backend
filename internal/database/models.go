@@ -46,18 +46,19 @@ type Song struct {
 }
 
 type Token struct {
-	Hash     []byte             `json:"hash"`
 	UserUuid uuid.UUID          `json:"user_uuid"`
+	Refresh  []byte             `json:"refresh"`
+	Access   []byte             `json:"access"`
 	Expiry   pgtype.Timestamptz `json:"expiry"`
-	Scope    string             `json:"scope"`
 }
 
 type User struct {
 	ID           int64              `json:"id"`
 	UserUuid     uuid.UUID          `json:"user_uuid"`
+	SpotifyID    string             `json:"spotify_id"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-	Name         string             `json:"name"`
+	Name         *string            `json:"name"`
 	Email        interface{}        `json:"email"`
 	PasswordHash []byte             `json:"password_hash"`
 	Activated    bool               `json:"activated"`

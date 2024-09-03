@@ -13,16 +13,15 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users(name, email, password_hash, activated)
-VALUES ($1, $2, $3, $4)
+INSERT INTO users(email, password_hash, spotify_id)
+VALUES ($1, $2, $3)
 RETURNING user_uuid, id, created_at, version
 `
 
 type CreateUserParams struct {
-	Name         string      `json:"name"`
 	Email        interface{} `json:"email"`
 	PasswordHash []byte      `json:"password_hash"`
-	Activated    bool        `json:"activated"`
+	SpotifyID    string      `json:"spotify_id"`
 }
 
 type CreateUserRow struct {
@@ -33,12 +32,7 @@ type CreateUserRow struct {
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
-	row := q.db.QueryRow(ctx, createUser,
-		arg.Name,
-		arg.Email,
-		arg.PasswordHash,
-		arg.Activated,
-	)
+	row := q.db.QueryRow(ctx, createUser, arg.Email, arg.PasswordHash, arg.SpotifyID)
 	var i CreateUserRow
 	err := row.Scan(
 		&i.UserUuid,
@@ -60,7 +54,7 @@ func (q *Queries) DeleteUser(ctx context.Context, userUuid uuid.UUID) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, user_uuid, created_at, updated_at, name, email, password_hash, activated, version
+SELECT id, user_uuid, spotify_id, created_at, updated_at, name, email, password_hash, activated, version
 FROM users
 WHERE email = $1
 `
@@ -71,6 +65,7 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email interface{}) (User, 
 	err := row.Scan(
 		&i.ID,
 		&i.UserUuid,
+		&i.SpotifyID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Name,
@@ -82,8 +77,21 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email interface{}) (User, 
 	return i, err
 }
 
+const getUserBySpotifyID = `-- name: GetUserBySpotifyID :one
+SELECT user_uuid
+FROM users 
+WHERE spotify_id = $1
+`
+
+func (q *Queries) GetUserBySpotifyID(ctx context.Context, spotifyID string) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getUserBySpotifyID, spotifyID)
+	var user_uuid uuid.UUID
+	err := row.Scan(&user_uuid)
+	return user_uuid, err
+}
+
 const getUserByUUID = `-- name: GetUserByUUID :one
-SELECT id, user_uuid, created_at, updated_at, name, email, password_hash, activated, version
+SELECT id, user_uuid, spotify_id, created_at, updated_at, name, email, password_hash, activated, version
 FROM users
 WHERE user_uuid = $1
 `
@@ -94,6 +102,7 @@ func (q *Queries) GetUserByUUID(ctx context.Context, userUuid uuid.UUID) (User, 
 	err := row.Scan(
 		&i.ID,
 		&i.UserUuid,
+		&i.SpotifyID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Name,
@@ -109,11 +118,11 @@ const updateUser = `-- name: UpdateUser :one
 UPDATE users
 SET name = $1, email = $2, password_hash = $3, activated = $4, version = version + 1
 WHERE id=$5 AND version = $6
-RETURNING id, user_uuid, created_at, updated_at, name, email, password_hash, activated, version
+RETURNING id, user_uuid, spotify_id, created_at, updated_at, name, email, password_hash, activated, version
 `
 
 type UpdateUserParams struct {
-	Name         string      `json:"name"`
+	Name         *string     `json:"name"`
 	Email        interface{} `json:"email"`
 	PasswordHash []byte      `json:"password_hash"`
 	Activated    bool        `json:"activated"`
@@ -134,6 +143,7 @@ func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, e
 	err := row.Scan(
 		&i.ID,
 		&i.UserUuid,
+		&i.SpotifyID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Name,

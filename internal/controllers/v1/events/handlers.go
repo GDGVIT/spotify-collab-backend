@@ -69,6 +69,12 @@ func (e *EventHandler) CreateEvent(c *gin.Context) {
 		return
 	}
 
+	err = tx.Commit(c)
+	if err != nil {
+		merrors.InternalServer(c, err.Error())
+		return
+	}
+
 	c.JSON(http.StatusOK, utils.BaseResponse{
 		Success:    true,
 		StatusCode: http.StatusOK,

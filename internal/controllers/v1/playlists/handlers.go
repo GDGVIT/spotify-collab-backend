@@ -17,15 +17,20 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/zmb3/spotify/v2"
+	spotifyauth "github.com/zmb3/spotify/v2/auth"
+	"golang.org/x/oauth2"
 )
 
 type PlaylistHandler struct {
-	db *pgxpool.Pool
+	db          *pgxpool.Pool
+	spotifyauth *spotifyauth.Authenticator
 }
 
-func Handler(db *pgxpool.Pool) *PlaylistHandler {
+func Handler(db *pgxpool.Pool, spotifyAuth *spotifyauth.Authenticator) *PlaylistHandler {
 	return &PlaylistHandler{
-		db: db,
+		db:          db,
+		spotifyauth: spotifyAuth,
 	}
 }
 
@@ -44,9 +49,46 @@ func (p *PlaylistHandler) CreatePlaylist(c *gin.Context) {
 	defer tx.Rollback(c)
 	qtx := database.New(p.db).WithTx(tx)
 
+	token, err := qtx.GetOAuthToken(c, req.UserUUID)
+	if err != nil {
+		merrors.InternalServer(c, err.Error())
+		return
+	}
+
+	oauthToken := &oauth2.Token{
+		AccessToken:  string(token.Access),
+		RefreshToken: string(token.Refresh),
+		Expiry:       token.Expiry.Time,
+	}
+
+	if !oauthToken.Valid() {
+		oauthToken, err = p.spotifyauth.RefreshToken(c, oauthToken)
+		if err != nil {
+			merrors.InternalServer(c, fmt.Sprintf("Couldn't get access token %s", err))
+			return
+		}
+
+		_, err := qtx.UpdateToken(c, database.UpdateTokenParams{
+			Refresh:  []byte(oauthToken.RefreshToken),
+			Access:   []byte(oauthToken.AccessToken),
+			UserUuid: req.UserUUID,
+		})
+		if err != nil {
+			merrors.InternalServer(c, err.Error())
+			return
+		}
+	}
+
 	// Generate Playlist from spotify
+	client := spotify.New(p.spotifyauth.Client(c, oauthToken))
+	spotifyPlaylist, err := client.CreatePlaylistForUser(c, token.SpotifyID, req.Name, "", true, false)
+	if err != nil {
+		merrors.InternalServer(c, fmt.Sprintf("Error while creating spotify playlist: %s", err.Error()))
+		return
+	}
+
 	playlist, err := qtx.CreatePlaylist(c, database.CreatePlaylistParams{
-		PlaylistID: "f",
+		PlaylistID: spotifyPlaylist.ID.String(),
 		UserUuid:   req.UserUUID,
 		Name:       req.Name,
 	})
@@ -281,15 +323,6 @@ func (p *PlaylistHandler) CreatePlaylistSpotify(c *gin.Context) {
 	if err != nil {
 		merrors.Validation(c, err.Error())
 		return
-	}
-
-	if req.AccessToken == "" {
-		merrors.Validation(c, "Access token is required")
-		return
-	}
-
-	if req.PlaylistName == "" {
-		merrors.Validation(c, "Playlist Name is required")
 	}
 
 	uid, err := GetUserId(req.AccessToken)
