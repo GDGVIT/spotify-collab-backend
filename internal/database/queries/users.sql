@@ -1,6 +1,6 @@
 -- name: CreateUser :one
-INSERT INTO users(email, password_hash, spotify_id)
-VALUES ($1, $2, $3)
+INSERT INTO users(email, password_hash, spotify_id, name)
+VALUES ($1, $2, $3, $4)
 RETURNING user_uuid, id, created_at, version;
 
 -- name: GetUserByEmail :one

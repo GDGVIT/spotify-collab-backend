@@ -17,28 +17,19 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	r.GET("/health", s.healthHandler)
 
-	r.POST("/events/new", s.eventHandler.CreateEvent)
-	r.GET("/events/list", s.eventHandler.ListEvents)
-	r.GET("/events/one", s.eventHandler.GetEvent)
-	r.POST("/events/one", s.eventHandler.UpdateEvent)
-	r.DELETE("/events/", s.eventHandler.DeleteEvent)
-
 	r.POST("/playlists", s.playlistHandler.CreatePlaylist)
 	r.GET("/playlists", s.playlistHandler.ListPlaylists)
 	r.GET("/playlists/:id", s.playlistHandler.GetPlaylist)
 	r.POST("/playlists/:id", s.playlistHandler.UpdatePlaylist)
 	r.DELETE("/playlists/:id", s.playlistHandler.DeletePlaylist)
-	r.PATCH("/playlists/config", s.playlistHandler.UpdateConfiguration)
 
-	r.POST("/songs/new", s.songHandler.AddSongToEvent)
+	r.POST("/songs/new", s.songHandler.AddSongToPlaylist)
 	r.POST("/songs/blacklist", s.songHandler.BlacklistSong)
 	r.GET("/songs/all", s.songHandler.GetAllSongs)
 	r.GET("/songs/blacklist", s.songHandler.GetBlacklistedSongs)
 	r.DELETE("/songs/blacklist", s.songHandler.DeleteBlacklistSong)
 
-	// Route needs to be changed
-	r.POST("/songs/add", s.songHandler.AddSongToPlaylist)
-	r.POST("/playlists/add", s.playlistHandler.CreatePlaylistSpotify)
+	r.POST("/songs/add", s.songHandler.KaranAddSongToPlaylist)
 
 	auth := r.Group("/auth")
 	auth.GET("login", s.authHandler.Register)

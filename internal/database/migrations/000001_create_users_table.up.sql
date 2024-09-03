@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS public.users (
 	spotify_id TEXT NOT NULL,
 	created_at timestamp with time zone DEFAULT Now() NOT NULL,
 	updated_at timestamp with time zone DEFAULT Now() NOT NULL,
-	name text,
+	name text NOT NULL,
 	email public."citext" NOT NULL,
 	password_hash bytea NOT NULL,
 	activated boolean DEFAULT false NOT NULL,

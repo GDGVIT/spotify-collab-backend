@@ -9,34 +9,14 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Event struct {
-	UserUuid  uuid.UUID          `json:"user_uuid"`
-	EventUuid uuid.UUID          `json:"event_uuid"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
-	Name      string             `json:"name"`
-	EventCode string             `json:"event_code"`
-}
-
-type EventsPlaylistsMapping struct {
-	EventUuid    uuid.UUID `json:"event_uuid"`
-	PlaylistUuid uuid.UUID `json:"playlist_uuid"`
-}
-
 type Playlist struct {
 	UserUuid     uuid.UUID          `json:"user_uuid"`
 	PlaylistUuid uuid.UUID          `json:"playlist_uuid"`
 	PlaylistID   string             `json:"playlist_id"`
 	Name         string             `json:"name"`
+	PlaylistCode string             `json:"playlist_code"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-}
-
-type PlaylistConfig struct {
-	PlaylistUuid    uuid.UUID `json:"playlist_uuid"`
-	Explicit        bool      `json:"explicit"`
-	RequireApproval bool      `json:"require_approval"`
-	MaxSong         int32     `json:"max_song"`
 }
 
 type Song struct {
@@ -58,7 +38,7 @@ type User struct {
 	SpotifyID    string             `json:"spotify_id"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-	Name         *string            `json:"name"`
+	Name         string             `json:"name"`
 	Email        interface{}        `json:"email"`
 	PasswordHash []byte             `json:"password_hash"`
 	Activated    bool               `json:"activated"`

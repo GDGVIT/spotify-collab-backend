@@ -12,7 +12,6 @@ import (
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
 
 	"spotify-collab/internal/controllers/v1/auth"
-	"spotify-collab/internal/controllers/v1/events"
 	"spotify-collab/internal/controllers/v1/playlists"
 	"spotify-collab/internal/controllers/v1/songs"
 	"spotify-collab/internal/database"
@@ -24,7 +23,6 @@ type Server struct {
 	db          *pgxpool.Pool
 	spotifyauth *spotifyauth.Authenticator
 
-	eventHandler    *events.EventHandler
 	playlistHandler *playlists.PlaylistHandler
 	songHandler     *songs.SongHandler
 	authHandler     *auth.AuthHandler
@@ -51,9 +49,8 @@ func NewServer() *http.Server {
 		db:          db,
 		spotifyauth: spotifyAuth,
 
-		eventHandler:    events.Handler(db),
 		playlistHandler: playlists.Handler(db, spotifyAuth),
-		songHandler:     songs.Handler(db),
+		songHandler:     songs.Handler(db, spotifyAuth),
 		authHandler:     auth.Handler(db, spotifyAuth),
 	}
 

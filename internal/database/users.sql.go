@@ -13,8 +13,8 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users(email, password_hash, spotify_id)
-VALUES ($1, $2, $3)
+INSERT INTO users(email, password_hash, spotify_id, name)
+VALUES ($1, $2, $3, $4)
 RETURNING user_uuid, id, created_at, version
 `
 
@@ -22,6 +22,7 @@ type CreateUserParams struct {
 	Email        interface{} `json:"email"`
 	PasswordHash []byte      `json:"password_hash"`
 	SpotifyID    string      `json:"spotify_id"`
+	Name         string      `json:"name"`
 }
 
 type CreateUserRow struct {
@@ -32,7 +33,12 @@ type CreateUserRow struct {
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
-	row := q.db.QueryRow(ctx, createUser, arg.Email, arg.PasswordHash, arg.SpotifyID)
+	row := q.db.QueryRow(ctx, createUser,
+		arg.Email,
+		arg.PasswordHash,
+		arg.SpotifyID,
+		arg.Name,
+	)
 	var i CreateUserRow
 	err := row.Scan(
 		&i.UserUuid,
@@ -122,7 +128,7 @@ RETURNING id, user_uuid, spotify_id, created_at, updated_at, name, email, passwo
 `
 
 type UpdateUserParams struct {
-	Name         *string     `json:"name"`
+	Name         string      `json:"name"`
 	Email        interface{} `json:"email"`
 	PasswordHash []byte      `json:"password_hash"`
 	Activated    bool        `json:"activated"`

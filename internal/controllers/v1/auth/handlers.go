@@ -71,9 +71,7 @@ func (a *AuthHandler) Register(c *gin.Context) {
 	})
 }
 
-func (a *AuthHandler) Login(c *gin.Context) {
-
-}
+func (a *AuthHandler) Login(c *gin.Context) {}
 
 func (a *AuthHandler) SpotifyLogin(c *gin.Context) {
 	url := a.spotifyauth.AuthURL(state)
@@ -115,9 +113,10 @@ func (a *AuthHandler) SpotifyCallback(c *gin.Context) {
 	if errors.Is(err, pgx.ErrNoRows) {
 		// If not, register a new user
 		usr, err := qtx.CreateUser(c, database.CreateUserParams{
-			Email:        "aditya@cmanish.com",
+			Email:        user.Email,
 			PasswordHash: []byte{'f', '3'},
 			SpotifyID:    spotifyID,
+			Name:         user.DisplayName,
 		})
 		userUUID = usr.UserUuid
 		var e *pgconn.PgError

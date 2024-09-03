@@ -1,6 +1,6 @@
 -- name: CreatePlaylist :one
-INSERT INTO playlists (playlist_id, user_uuid, name)
-VALUES ($1, $2, $3)
+INSERT INTO playlists (playlist_id, user_uuid, name, playlist_code)
+VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: ListPlaylists :many
@@ -18,10 +18,10 @@ SELECT playlist_uuid
 FROM playlists
 WHERE user_uuid = $1 AND name = $2;
 
--- name: GetPlaylistUUIDByEventUUID :one
-Select playlist_uuid
-FROM events_playlists_mapping
-WHERE event_uuid = $1;
+-- name: GetPlaylistIDByCode :one
+SELECT playlist_id
+FROM playlists
+WHERE playlist_code = $1;
 
 -- name: UpdatePlaylistName :one
 UPDATE playlists

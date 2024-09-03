@@ -12,25 +12,32 @@ import (
 )
 
 const createPlaylist = `-- name: CreatePlaylist :one
-INSERT INTO playlists (playlist_id, user_uuid, name)
-VALUES ($1, $2, $3)
-RETURNING user_uuid, playlist_uuid, playlist_id, name, created_at, updated_at
+INSERT INTO playlists (playlist_id, user_uuid, name, playlist_code)
+VALUES ($1, $2, $3, $4)
+RETURNING user_uuid, playlist_uuid, playlist_id, name, playlist_code, created_at, updated_at
 `
 
 type CreatePlaylistParams struct {
-	PlaylistID string    `json:"playlist_id"`
-	UserUuid   uuid.UUID `json:"user_uuid"`
-	Name       string    `json:"name"`
+	PlaylistID   string    `json:"playlist_id"`
+	UserUuid     uuid.UUID `json:"user_uuid"`
+	Name         string    `json:"name"`
+	PlaylistCode string    `json:"playlist_code"`
 }
 
 func (q *Queries) CreatePlaylist(ctx context.Context, arg CreatePlaylistParams) (Playlist, error) {
-	row := q.db.QueryRow(ctx, createPlaylist, arg.PlaylistID, arg.UserUuid, arg.Name)
+	row := q.db.QueryRow(ctx, createPlaylist,
+		arg.PlaylistID,
+		arg.UserUuid,
+		arg.Name,
+		arg.PlaylistCode,
+	)
 	var i Playlist
 	err := row.Scan(
 		&i.UserUuid,
 		&i.PlaylistUuid,
 		&i.PlaylistID,
 		&i.Name,
+		&i.PlaylistCode,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -51,7 +58,7 @@ func (q *Queries) DeletePlaylist(ctx context.Context, playlistUuid uuid.UUID) (i
 }
 
 const getPlaylist = `-- name: GetPlaylist :one
-SELECT user_uuid, playlist_uuid, playlist_id, name, created_at, updated_at
+SELECT user_uuid, playlist_uuid, playlist_id, name, playlist_code, created_at, updated_at
 FROM playlists
 WHERE playlist_uuid = $1
 `
@@ -64,23 +71,24 @@ func (q *Queries) GetPlaylist(ctx context.Context, playlistUuid uuid.UUID) (Play
 		&i.PlaylistUuid,
 		&i.PlaylistID,
 		&i.Name,
+		&i.PlaylistCode,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
 	return i, err
 }
 
-const getPlaylistUUIDByEventUUID = `-- name: GetPlaylistUUIDByEventUUID :one
-Select playlist_uuid
-FROM events_playlists_mapping
-WHERE event_uuid = $1
+const getPlaylistIDByCode = `-- name: GetPlaylistIDByCode :one
+SELECT playlist_id
+FROM playlists
+WHERE playlist_code = $1
 `
 
-func (q *Queries) GetPlaylistUUIDByEventUUID(ctx context.Context, eventUuid uuid.UUID) (uuid.UUID, error) {
-	row := q.db.QueryRow(ctx, getPlaylistUUIDByEventUUID, eventUuid)
-	var playlist_uuid uuid.UUID
-	err := row.Scan(&playlist_uuid)
-	return playlist_uuid, err
+func (q *Queries) GetPlaylistIDByCode(ctx context.Context, playlistCode string) (string, error) {
+	row := q.db.QueryRow(ctx, getPlaylistIDByCode, playlistCode)
+	var playlist_id string
+	err := row.Scan(&playlist_id)
+	return playlist_id, err
 }
 
 const getPlaylistUUIDByName = `-- name: GetPlaylistUUIDByName :one
@@ -102,7 +110,7 @@ func (q *Queries) GetPlaylistUUIDByName(ctx context.Context, arg GetPlaylistUUID
 }
 
 const listPlaylists = `-- name: ListPlaylists :many
-SELECT user_uuid, playlist_uuid, playlist_id, name, created_at, updated_at
+SELECT user_uuid, playlist_uuid, playlist_id, name, playlist_code, created_at, updated_at
 FROM playlists
 WHERE user_uuid = $1
 `
@@ -121,6 +129,7 @@ func (q *Queries) ListPlaylists(ctx context.Context, userUuid uuid.UUID) ([]Play
 			&i.PlaylistUuid,
 			&i.PlaylistID,
 			&i.Name,
+			&i.PlaylistCode,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 		); err != nil {
@@ -138,7 +147,7 @@ const updatePlaylistName = `-- name: UpdatePlaylistName :one
 UPDATE playlists
 SET name = $1
 WHERE playlist_uuid = $2
-RETURNING user_uuid, playlist_uuid, playlist_id, name, created_at, updated_at
+RETURNING user_uuid, playlist_uuid, playlist_id, name, playlist_code, created_at, updated_at
 `
 
 type UpdatePlaylistNameParams struct {
@@ -154,6 +163,7 @@ func (q *Queries) UpdatePlaylistName(ctx context.Context, arg UpdatePlaylistName
 		&i.PlaylistUuid,
 		&i.PlaylistID,
 		&i.Name,
+		&i.PlaylistCode,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
