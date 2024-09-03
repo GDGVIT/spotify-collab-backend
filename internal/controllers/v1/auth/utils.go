@@ -3,8 +3,16 @@ package auth
 import (
 	"errors"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
+
+type ContextUser struct {
+	UserUUID  uuid.UUID
+	SpotifyID string
+}
+
+var AnonymousUser = &ContextUser{}
 
 // SetHash calculates the hash of the given password and stores the hash
 func SetHash(plaintextPassword string) ([]byte, error) {

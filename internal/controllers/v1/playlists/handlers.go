@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"spotify-collab/internal/controllers/v1/auth"
 	"spotify-collab/internal/database"
 	"spotify-collab/internal/merrors"
 	"spotify-collab/internal/utils"
@@ -36,6 +37,16 @@ func (p *PlaylistHandler) CreatePlaylist(c *gin.Context) {
 		return
 	}
 
+	u, ok := c.Get("user")
+	if !ok {
+		panic(" user failed to set in context ")
+	}
+	user := u.(*auth.ContextUser)
+	if user == auth.AnonymousUser {
+		merrors.Unauthorized(c, "This action is forbidden.")
+		return
+	}
+
 	tx, err := p.db.Begin(c)
 	if err != nil {
 		merrors.InternalServer(c, err.Error())
@@ -44,9 +55,7 @@ func (p *PlaylistHandler) CreatePlaylist(c *gin.Context) {
 	defer tx.Rollback(c)
 	qtx := database.New(p.db).WithTx(tx)
 
-	// TODO: Get UserUUID from the context instead of request body
-
-	token, err := qtx.GetOAuthToken(c, req.UserUUID)
+	token, err := qtx.GetOAuthToken(c, user.UserUUID)
 	if err != nil {
 		merrors.InternalServer(c, err.Error())
 		return
@@ -68,7 +77,7 @@ func (p *PlaylistHandler) CreatePlaylist(c *gin.Context) {
 		_, err := qtx.UpdateToken(c, database.UpdateTokenParams{
 			Refresh:  []byte(oauthToken.RefreshToken),
 			Access:   []byte(oauthToken.AccessToken),
-			UserUuid: req.UserUUID,
+			UserUuid: user.UserUUID,
 		})
 		if err != nil {
 			merrors.InternalServer(c, err.Error())
@@ -86,7 +95,7 @@ func (p *PlaylistHandler) CreatePlaylist(c *gin.Context) {
 
 	playlist, err := qtx.CreatePlaylist(c, database.CreatePlaylistParams{
 		PlaylistID:   spotifyPlaylist.ID.String(),
-		UserUuid:     req.UserUUID,
+		UserUuid:     user.UserUUID,
 		Name:         req.Name,
 		PlaylistCode: GeneratePlaylistCode(6),
 	})

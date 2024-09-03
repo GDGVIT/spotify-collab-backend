@@ -2,9 +2,14 @@ package songs
 
 import "github.com/google/uuid"
 
-type AddSongToPlaylistReq struct {
+type AddSongToDBReq struct {
 	PlaylistCode string `json:"playlist_code"`
 	SongURI      string `json:"song_uri"`
+}
+type AddSongToPlaylistReq struct {
+	PlaylistUUID uuid.UUID `json:"playlist_uuid"`
+	SongURI      string    `json:"song_uri"`
+	Option       string    `uri:"option" binding:"oneof= accept reject"`
 }
 
 type BlacklistSongReq struct {
@@ -14,16 +19,4 @@ type BlacklistSongReq struct {
 
 type GetAllSongsReq struct {
 	PlaylistUUID uuid.UUID `json:"playlist_uuid"`
-}
-
-type KaranAddSongToPlaylistReq struct {
-	SongURIList []string `json:"uris"`
-
-	// temporary pass playlist id and access token
-	PlaylistID  string `json:"playlist_id"`
-	AccessToken string `json:"access_token"`
-}
-
-type RequestBody struct {
-	Uris []string `json:"uris"`
 }

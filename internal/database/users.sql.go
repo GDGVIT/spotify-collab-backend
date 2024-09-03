@@ -89,6 +89,25 @@ func (q *Queries) GetUserBySpotifyID(ctx context.Context, spotifyID string) (uui
 	return user_uuid, err
 }
 
+const getUserByToken = `-- name: GetUserByToken :one
+SELECT tokens.user_uuid, spotify_id
+FROM tokens
+INNER JOIN users ON users.user_uuid = tokens.user_uuid
+WHERE access = $1
+`
+
+type GetUserByTokenRow struct {
+	UserUuid  uuid.UUID `json:"user_uuid"`
+	SpotifyID string    `json:"spotify_id"`
+}
+
+func (q *Queries) GetUserByToken(ctx context.Context, access []byte) (GetUserByTokenRow, error) {
+	row := q.db.QueryRow(ctx, getUserByToken, access)
+	var i GetUserByTokenRow
+	err := row.Scan(&i.UserUuid, &i.SpotifyID)
+	return i, err
+}
+
 const getUserByUUID = `-- name: GetUserByUUID :one
 SELECT id, user_uuid, spotify_id, created_at, updated_at, name, email, activated, version
 FROM users

@@ -31,6 +31,22 @@ func (q *Queries) AddSong(ctx context.Context, arg AddSongParams) (Song, error) 
 	return i, err
 }
 
+const addSongToPlaylist = `-- name: AddSongToPlaylist :exec
+UPDATE songs
+SET count = count - 1
+WHERE song_uri = $1 and playlist_uuid = $2
+`
+
+type AddSongToPlaylistParams struct {
+	SongUri      string    `json:"song_uri"`
+	PlaylistUuid uuid.UUID `json:"playlist_uuid"`
+}
+
+func (q *Queries) AddSongToPlaylist(ctx context.Context, arg AddSongToPlaylistParams) error {
+	_, err := q.db.Exec(ctx, addSongToPlaylist, arg.SongUri, arg.PlaylistUuid)
+	return err
+}
+
 const blacklistSong = `-- name: BlacklistSong :execrows
 UPDATE songs
 SET count = -1
@@ -98,7 +114,7 @@ func (q *Queries) GetAllBlacklisted(ctx context.Context, playlistUuid uuid.UUID)
 const getAllSongs = `-- name: GetAllSongs :many
 SELECT song_uri, playlist_uuid, count 
 FROM songs
-WHERE playlist_uuid = $1 AND count != -1
+WHERE playlist_uuid = $1 AND count > 0
 `
 
 func (q *Queries) GetAllSongs(ctx context.Context, playlistUuid uuid.UUID) ([]Song, error) {

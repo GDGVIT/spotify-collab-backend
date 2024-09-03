@@ -78,17 +78,30 @@ func (q *Queries) GetPlaylist(ctx context.Context, playlistUuid uuid.UUID) (Play
 	return i, err
 }
 
-const getPlaylistIDByCode = `-- name: GetPlaylistIDByCode :one
+const getPlaylistIDByUUID = `-- name: GetPlaylistIDByUUID :one
 SELECT playlist_id
+FROM playlists
+WHERE playlist_uuid = $1
+`
+
+func (q *Queries) GetPlaylistIDByUUID(ctx context.Context, playlistUuid uuid.UUID) (string, error) {
+	row := q.db.QueryRow(ctx, getPlaylistIDByUUID, playlistUuid)
+	var playlist_id string
+	err := row.Scan(&playlist_id)
+	return playlist_id, err
+}
+
+const getPlaylistUUIDByCode = `-- name: GetPlaylistUUIDByCode :one
+SELECT playlist_uuid
 FROM playlists
 WHERE playlist_code = $1
 `
 
-func (q *Queries) GetPlaylistIDByCode(ctx context.Context, playlistCode string) (string, error) {
-	row := q.db.QueryRow(ctx, getPlaylistIDByCode, playlistCode)
-	var playlist_id string
-	err := row.Scan(&playlist_id)
-	return playlist_id, err
+func (q *Queries) GetPlaylistUUIDByCode(ctx context.Context, playlistCode string) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getPlaylistUUIDByCode, playlistCode)
+	var playlist_uuid uuid.UUID
+	err := row.Scan(&playlist_uuid)
+	return playlist_uuid, err
 }
 
 const getPlaylistUUIDByName = `-- name: GetPlaylistUUIDByName :one

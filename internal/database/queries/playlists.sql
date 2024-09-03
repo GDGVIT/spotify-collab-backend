@@ -18,8 +18,13 @@ SELECT playlist_uuid
 FROM playlists
 WHERE user_uuid = $1 AND name = $2;
 
--- name: GetPlaylistIDByCode :one
+-- name: GetPlaylistIDByUUID :one
 SELECT playlist_id
+FROM playlists
+WHERE playlist_uuid = $1;
+
+-- name: GetPlaylistUUIDByCode :one
+SELECT playlist_uuid
 FROM playlists
 WHERE playlist_code = $1;
 

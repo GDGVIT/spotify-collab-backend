@@ -12,6 +12,7 @@ import (
 
 func (s *Server) RegisterRoutes() http.Handler {
 	r := gin.Default()
+	r.Use(CORSMiddleware())
 
 	r.GET("/", s.HelloWorldHandler)
 
@@ -19,19 +20,19 @@ func (s *Server) RegisterRoutes() http.Handler {
 
 	v1 := r.Group("/v1")
 
-	v1.POST("/playlists", s.playlistHandler.CreatePlaylist)
+	v1.POST("/playlists", s.authenticate(), s.playlistHandler.CreatePlaylist)
 	v1.GET("/playlists", s.playlistHandler.ListPlaylists)
 	v1.GET("/playlists/:id", s.playlistHandler.GetPlaylist)
 	v1.POST("/playlists/:id", s.playlistHandler.UpdatePlaylist)
 	v1.DELETE("/playlists/:id", s.playlistHandler.DeletePlaylist)
 
-	v1.POST("/songs/new", s.songHandler.AddSongToPlaylist)
+	v1.POST("/songs/add", s.songHandler.AddSongToDB)
+	v1.POST("/songs/:option", s.authenticate(), s.songHandler.AddSongToPlaylist) // Either accept or reject
+	v1.GET("/songs/all", s.authenticate(), s.songHandler.GetAllSongs)
+
 	v1.POST("/songs/blacklist", s.songHandler.BlacklistSong)
-	v1.GET("/songs/all", s.songHandler.GetAllSongs)
 	v1.GET("/songs/blacklist", s.songHandler.GetBlacklistedSongs)
 	v1.DELETE("/songs/blacklist", s.songHandler.DeleteBlacklistSong)
-
-	v1.POST("/songs/add", s.songHandler.KaranAddSongToPlaylist)
 
 	auth := v1.Group("/auth")
 	auth.GET("spotify/login", s.authHandler.SpotifyLogin)

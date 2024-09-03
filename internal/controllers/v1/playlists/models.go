@@ -3,8 +3,7 @@ package playlists
 import "github.com/google/uuid"
 
 type CreatePlaylistReq struct {
-	UserUUID uuid.UUID `json:"user_uuid" binding:"required"`
-	Name     string    `json:"name" binding:"required"`
+	Name string `json:"name" binding:"required"`
 }
 
 type ListPlaylistsReq struct {

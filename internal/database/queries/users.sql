@@ -18,6 +18,12 @@ SELECT user_uuid
 FROM users 
 WHERE spotify_id = $1;
 
+-- name: GetUserByToken :one
+SELECT tokens.user_uuid, spotify_id
+FROM tokens
+INNER JOIN users ON users.user_uuid = tokens.user_uuid
+WHERE access = $1;
+
 -- name: DeleteUser :exec
 DELETE FROM users
 WHERE user_uuid = $1;
