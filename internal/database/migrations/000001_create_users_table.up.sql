@@ -9,7 +9,6 @@ CREATE TABLE IF NOT EXISTS public.users (
 	updated_at timestamp with time zone DEFAULT Now() NOT NULL,
 	name text NOT NULL,
 	email public."citext" NOT NULL,
-	password_hash bytea NOT NULL,
 	activated boolean DEFAULT false NOT NULL,
 	"version" integer DEFAULT 1 NOT NULL,
 	CONSTRAINT users_email_unique UNIQUE (email),

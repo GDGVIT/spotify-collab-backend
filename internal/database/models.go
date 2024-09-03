@@ -33,14 +33,13 @@ type Token struct {
 }
 
 type User struct {
-	ID           int64              `json:"id"`
-	UserUuid     uuid.UUID          `json:"user_uuid"`
-	SpotifyID    string             `json:"spotify_id"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-	Name         string             `json:"name"`
-	Email        interface{}        `json:"email"`
-	PasswordHash []byte             `json:"password_hash"`
-	Activated    bool               `json:"activated"`
-	Version      int32              `json:"version"`
+	ID        int64              `json:"id"`
+	UserUuid  uuid.UUID          `json:"user_uuid"`
+	SpotifyID string             `json:"spotify_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	Name      string             `json:"name"`
+	Email     interface{}        `json:"email"`
+	Activated bool               `json:"activated"`
+	Version   int32              `json:"version"`
 }

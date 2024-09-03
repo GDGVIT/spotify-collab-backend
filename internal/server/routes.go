@@ -32,7 +32,6 @@ func (s *Server) RegisterRoutes() http.Handler {
 	r.POST("/songs/add", s.songHandler.KaranAddSongToPlaylist)
 
 	auth := r.Group("/auth")
-	auth.GET("login", s.authHandler.Register)
 	auth.GET("spotify/login", s.authHandler.SpotifyLogin)
 	auth.GET("spotify/callback", s.authHandler.SpotifyCallback)
 

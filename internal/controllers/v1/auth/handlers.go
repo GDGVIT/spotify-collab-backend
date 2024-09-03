@@ -34,45 +34,6 @@ func Handler(db *pgxpool.Pool, spotifyAuth *spotifyauth.Authenticator) *AuthHand
 	}
 }
 
-func (a *AuthHandler) Register(c *gin.Context) {
-	var input struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required"`
-	}
-
-	err := c.ShouldBindJSON(&input)
-	if err != nil {
-		merrors.Validation(c, err.Error())
-		return
-	}
-
-	pHash, err := SetHash(input.Password)
-	if err != nil {
-		merrors.InternalServer(c, err.Error())
-		return
-	}
-
-	q := database.New(a.db)
-
-	user, err := q.CreateUser(c, database.CreateUserParams{
-		Email:        input.Email,
-		PasswordHash: pHash,
-	})
-	if err != nil {
-		merrors.InternalServer(c, err.Error())
-		return
-	}
-
-	c.JSON(http.StatusOK, utils.BaseResponse{
-		Success:    true,
-		Message:    "User successfully registered",
-		Data:       user,
-		StatusCode: http.StatusOK,
-	})
-}
-
-func (a *AuthHandler) Login(c *gin.Context) {}
-
 func (a *AuthHandler) SpotifyLogin(c *gin.Context) {
 	url := a.spotifyauth.AuthURL(state)
 	fmt.Println("Please log in to Spotify by visiting the following page in your browser:", url)
@@ -114,7 +75,6 @@ func (a *AuthHandler) SpotifyCallback(c *gin.Context) {
 		// If not, register a new user
 		usr, err := qtx.CreateUser(c, database.CreateUserParams{
 			Email:        user.Email,
-			PasswordHash: []byte{'f', '3'},
 			SpotifyID:    spotifyID,
 			Name:         user.DisplayName,
 		})

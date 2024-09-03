@@ -1,6 +1,6 @@
 -- name: CreateUser :one
-INSERT INTO users(email, password_hash, spotify_id, name)
-VALUES ($1, $2, $3, $4)
+INSERT INTO users(email, spotify_id, name)
+VALUES ($1, $2, $3)
 RETURNING user_uuid, id, created_at, version;
 
 -- name: GetUserByEmail :one
@@ -17,12 +17,6 @@ WHERE user_uuid = $1;
 SELECT user_uuid
 FROM users 
 WHERE spotify_id = $1;
-
--- name: UpdateUser :one
-UPDATE users
-SET name = $1, email = $2, password_hash = $3, activated = $4, version = version + 1
-WHERE id=$5 AND version = $6
-RETURNING *;
 
 -- name: DeleteUser :exec
 DELETE FROM users
