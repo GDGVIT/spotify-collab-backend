@@ -9,34 +9,14 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type Event struct {
-	UserUuid  uuid.UUID          `json:"user_uuid"`
-	EventUuid uuid.UUID          `json:"event_uuid"`
-	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
-	Name      string             `json:"name"`
-	EventCode string             `json:"event_code"`
-}
-
-type EventsPlaylistsMapping struct {
-	EventUuid    uuid.UUID `json:"event_uuid"`
-	PlaylistUuid uuid.UUID `json:"playlist_uuid"`
-}
-
 type Playlist struct {
 	UserUuid     uuid.UUID          `json:"user_uuid"`
 	PlaylistUuid uuid.UUID          `json:"playlist_uuid"`
 	PlaylistID   string             `json:"playlist_id"`
 	Name         string             `json:"name"`
+	PlaylistCode string             `json:"playlist_code"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-}
-
-type PlaylistConfig struct {
-	PlaylistUuid    uuid.UUID `json:"playlist_uuid"`
-	Explicit        bool      `json:"explicit"`
-	RequireApproval bool      `json:"require_approval"`
-	MaxSong         int32     `json:"max_song"`
 }
 
 type Song struct {
@@ -46,20 +26,20 @@ type Song struct {
 }
 
 type Token struct {
-	Hash     []byte             `json:"hash"`
 	UserUuid uuid.UUID          `json:"user_uuid"`
+	Refresh  []byte             `json:"refresh"`
+	Access   []byte             `json:"access"`
 	Expiry   pgtype.Timestamptz `json:"expiry"`
-	Scope    string             `json:"scope"`
 }
 
 type User struct {
-	ID           int64              `json:"id"`
-	UserUuid     uuid.UUID          `json:"user_uuid"`
-	CreatedAt    pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
-	Name         string             `json:"name"`
-	Email        interface{}        `json:"email"`
-	PasswordHash []byte             `json:"password_hash"`
-	Activated    bool               `json:"activated"`
-	Version      int32              `json:"version"`
+	ID        int64              `json:"id"`
+	UserUuid  uuid.UUID          `json:"user_uuid"`
+	SpotifyID string             `json:"spotify_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+	Name      string             `json:"name"`
+	Email     interface{}        `json:"email"`
+	Activated bool               `json:"activated"`
+	Version   int32              `json:"version"`
 }

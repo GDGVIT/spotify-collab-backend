@@ -35,15 +35,3 @@ func validateDeletePlaylistReq(c *gin.Context) (DeletePlaylistReq, error) {
 	err := c.ShouldBindUri(&req)
 	return req, err
 }
-
-func validateUpdateConfigurationReq(c *gin.Context) (UpdateConfigurationReq, error) {
-	var req UpdateConfigurationReq
-	err := c.ShouldBindJSON(&req)
-	return req, err
-}
-
-func validateCreatePlaylistSpotifyReq(c *gin.Context) (CreatePlaylistSpotifyReq, error) {
-	var req CreatePlaylistSpotifyReq
-	err := c.ShouldBindJSON(&req)
-	return req, err
-}

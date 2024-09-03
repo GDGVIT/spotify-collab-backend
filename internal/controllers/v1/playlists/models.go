@@ -3,8 +3,7 @@ package playlists
 import "github.com/google/uuid"
 
 type CreatePlaylistReq struct {
-	UserUUID uuid.UUID `json:"user_uuid" binding:"required"`
-	Name     string    `json:"name" binding:"required"`
+	Name string `json:"name" binding:"required"`
 }
 
 type ListPlaylistsReq struct {
@@ -17,7 +16,7 @@ type GetPlaylistReq struct {
 
 type UpdatePlaylistReq struct {
 	PlaylistUUID string `binding:"required,uuid" uri:"id"`
-	Name         string    `json:"name" binding:"required"`
+	Name         string `json:"name" binding:"required"`
 }
 
 type DeletePlaylistReq struct {
@@ -32,12 +31,12 @@ type UpdateConfigurationReq struct {
 }
 
 type CreatePlaylistSpotifyReq struct {
-	PlaylistName    string `json:"playlist_name"`
+	PlaylistName    string `json:"playlist_name" binding:"required"`
 	IsPublic        bool   `json:"is_public"`
 	IsCollaborative bool   `json:"is_collaborative"`
 	Description     string `json:"description"`
 
-	AccessToken string `json:"access_token"`
+	AccessToken string `json:"access_token" binding:"required"`
 	// UserID 			string	  `json:"user_id"`
 }
 

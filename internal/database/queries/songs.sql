@@ -5,10 +5,15 @@ ON CONFLICT ON CONSTRAINT songs_pk
 DO UPDATE SET count = count + 1
 RETURNING *;
 
+-- name: AddSongToPlaylist :exec
+UPDATE songs
+SET count = count - 1
+WHERE song_uri = $1 and playlist_uuid = $2;
+
 -- name: GetAllSongs :many
 SELECT * 
 FROM songs
-WHERE playlist_uuid = $1 AND count != -1;
+WHERE playlist_uuid = $1 AND count > 0;
 
 -- name: BlacklistSong :execrows
 UPDATE songs

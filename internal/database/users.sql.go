@@ -13,16 +13,15 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users(name, email, password_hash, activated)
-VALUES ($1, $2, $3, $4)
+INSERT INTO users(email, spotify_id, name)
+VALUES ($1, $2, $3)
 RETURNING user_uuid, id, created_at, version
 `
 
 type CreateUserParams struct {
-	Name         string      `json:"name"`
-	Email        interface{} `json:"email"`
-	PasswordHash []byte      `json:"password_hash"`
-	Activated    bool        `json:"activated"`
+	Email     interface{} `json:"email"`
+	SpotifyID string      `json:"spotify_id"`
+	Name      string      `json:"name"`
 }
 
 type CreateUserRow struct {
@@ -33,12 +32,7 @@ type CreateUserRow struct {
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (CreateUserRow, error) {
-	row := q.db.QueryRow(ctx, createUser,
-		arg.Name,
-		arg.Email,
-		arg.PasswordHash,
-		arg.Activated,
-	)
+	row := q.db.QueryRow(ctx, createUser, arg.Email, arg.SpotifyID, arg.Name)
 	var i CreateUserRow
 	err := row.Scan(
 		&i.UserUuid,
@@ -60,7 +54,7 @@ func (q *Queries) DeleteUser(ctx context.Context, userUuid uuid.UUID) error {
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, user_uuid, created_at, updated_at, name, email, password_hash, activated, version
+SELECT id, user_uuid, spotify_id, created_at, updated_at, name, email, activated, version
 FROM users
 WHERE email = $1
 `
@@ -71,19 +65,51 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email interface{}) (User, 
 	err := row.Scan(
 		&i.ID,
 		&i.UserUuid,
+		&i.SpotifyID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Name,
 		&i.Email,
-		&i.PasswordHash,
 		&i.Activated,
 		&i.Version,
 	)
 	return i, err
 }
 
+const getUserBySpotifyID = `-- name: GetUserBySpotifyID :one
+SELECT user_uuid
+FROM users 
+WHERE spotify_id = $1
+`
+
+func (q *Queries) GetUserBySpotifyID(ctx context.Context, spotifyID string) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, getUserBySpotifyID, spotifyID)
+	var user_uuid uuid.UUID
+	err := row.Scan(&user_uuid)
+	return user_uuid, err
+}
+
+const getUserByToken = `-- name: GetUserByToken :one
+SELECT tokens.user_uuid, spotify_id
+FROM tokens
+INNER JOIN users ON users.user_uuid = tokens.user_uuid
+WHERE access = $1
+`
+
+type GetUserByTokenRow struct {
+	UserUuid  uuid.UUID `json:"user_uuid"`
+	SpotifyID string    `json:"spotify_id"`
+}
+
+func (q *Queries) GetUserByToken(ctx context.Context, access []byte) (GetUserByTokenRow, error) {
+	row := q.db.QueryRow(ctx, getUserByToken, access)
+	var i GetUserByTokenRow
+	err := row.Scan(&i.UserUuid, &i.SpotifyID)
+	return i, err
+}
+
 const getUserByUUID = `-- name: GetUserByUUID :one
-SELECT id, user_uuid, created_at, updated_at, name, email, password_hash, activated, version
+SELECT id, user_uuid, spotify_id, created_at, updated_at, name, email, activated, version
 FROM users
 WHERE user_uuid = $1
 `
@@ -94,51 +120,11 @@ func (q *Queries) GetUserByUUID(ctx context.Context, userUuid uuid.UUID) (User, 
 	err := row.Scan(
 		&i.ID,
 		&i.UserUuid,
+		&i.SpotifyID,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Name,
 		&i.Email,
-		&i.PasswordHash,
-		&i.Activated,
-		&i.Version,
-	)
-	return i, err
-}
-
-const updateUser = `-- name: UpdateUser :one
-UPDATE users
-SET name = $1, email = $2, password_hash = $3, activated = $4, version = version + 1
-WHERE id=$5 AND version = $6
-RETURNING id, user_uuid, created_at, updated_at, name, email, password_hash, activated, version
-`
-
-type UpdateUserParams struct {
-	Name         string      `json:"name"`
-	Email        interface{} `json:"email"`
-	PasswordHash []byte      `json:"password_hash"`
-	Activated    bool        `json:"activated"`
-	ID           int64       `json:"id"`
-	Version      int32       `json:"version"`
-}
-
-func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
-	row := q.db.QueryRow(ctx, updateUser,
-		arg.Name,
-		arg.Email,
-		arg.PasswordHash,
-		arg.Activated,
-		arg.ID,
-		arg.Version,
-	)
-	var i User
-	err := row.Scan(
-		&i.ID,
-		&i.UserUuid,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.Name,
-		&i.Email,
-		&i.PasswordHash,
 		&i.Activated,
 		&i.Version,
 	)

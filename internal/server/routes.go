@@ -12,33 +12,31 @@ import (
 
 func (s *Server) RegisterRoutes() http.Handler {
 	r := gin.Default()
+	r.Use(CORSMiddleware())
 
 	r.GET("/", s.HelloWorldHandler)
 
 	r.GET("/health", s.healthHandler)
 
-	r.POST("/events/new", s.eventHandler.CreateEvent)
-	r.GET("/events/list", s.eventHandler.ListEvents)
-	r.GET("/events/one", s.eventHandler.GetEvent)
-	r.POST("/events/one", s.eventHandler.UpdateEvent)
-	r.DELETE("/events/", s.eventHandler.DeleteEvent)
+	v1 := r.Group("/v1")
 
-	r.POST("/playlists", s.playlistHandler.CreatePlaylist)
-	r.GET("/playlists", s.playlistHandler.ListPlaylists)
-	r.GET("/playlists/:id", s.playlistHandler.GetPlaylist)
-	r.POST("/playlists/:id", s.playlistHandler.UpdatePlaylist)
-	r.DELETE("/playlists/:id", s.playlistHandler.DeletePlaylist)
-	r.PATCH("/playlists/config", s.playlistHandler.UpdateConfiguration)
+	v1.POST("/playlists", s.authenticate(), s.playlistHandler.CreatePlaylist)
+	v1.GET("/playlists", s.playlistHandler.ListPlaylists)
+	v1.GET("/playlists/:id", s.playlistHandler.GetPlaylist)
+	v1.POST("/playlists/:id", s.playlistHandler.UpdatePlaylist)
+	v1.DELETE("/playlists/:id", s.playlistHandler.DeletePlaylist)
 
-	r.POST("/songs/new", s.songHandler.AddSongToEvent)
-	r.POST("/songs/blacklist", s.songHandler.BlacklistSong)
-	r.GET("/songs/all", s.songHandler.GetAllSongs)
-	r.GET("/songs/blacklist", s.songHandler.GetBlacklistedSongs)
-	r.DELETE("/songs/blacklist", s.songHandler.DeleteBlacklistSong)
+	v1.POST("/songs/add", s.songHandler.AddSongToDB)
+	v1.POST("/songs/:option", s.authenticate(), s.songHandler.AddSongToPlaylist) // Either accept or reject
+	v1.GET("/songs/all", s.authenticate(), s.songHandler.GetAllSongs)
 
-	// Route needs to be changed
-	r.POST("/songs/add", s.songHandler.AddSongToPlaylist)
-	r.POST("/playlists/add", s.playlistHandler.CreatePlaylistSpotify)
+	v1.POST("/songs/blacklist", s.songHandler.BlacklistSong)
+	v1.GET("/songs/blacklist", s.songHandler.GetBlacklistedSongs)
+	v1.DELETE("/songs/blacklist", s.songHandler.DeleteBlacklistSong)
+
+	auth := v1.Group("/auth")
+	auth.GET("spotify/login", s.authHandler.SpotifyLogin)
+	auth.GET("spotify/callback", s.authHandler.SpotifyCallback)
 
 	return r
 }

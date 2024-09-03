@@ -9,8 +9,9 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/joho/godotenv/autoload"
+	spotifyauth "github.com/zmb3/spotify/v2/auth"
 
-	"spotify-collab/internal/controllers/v1/events"
+	"spotify-collab/internal/controllers/v1/auth"
 	"spotify-collab/internal/controllers/v1/playlists"
 	"spotify-collab/internal/controllers/v1/songs"
 	"spotify-collab/internal/database"
@@ -19,22 +20,38 @@ import (
 type Server struct {
 	port int
 
-	db              *pgxpool.Pool
-	eventHandler    *events.EventHandler
+	db          *pgxpool.Pool
+	spotifyauth *spotifyauth.Authenticator
+
 	playlistHandler *playlists.PlaylistHandler
 	songHandler     *songs.SongHandler
+	authHandler     *auth.AuthHandler
 }
 
 func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 	db := database.NewService()
+
+	redirectURI := "http://localhost:8080/auth/spotify/callback"
+	scopes := []string{
+		spotifyauth.ScopeUserModifyPlaybackState,
+		spotifyauth.ScopePlaylistModifyPrivate,
+		spotifyauth.ScopePlaylistModifyPublic,
+		spotifyauth.ScopeUserReadPrivate,
+		spotifyauth.ScopeUserReadCurrentlyPlaying,
+		spotifyauth.ScopeUserReadPlaybackState,
+	}
+	spotifyAuth := spotifyauth.New(spotifyauth.WithRedirectURL(redirectURI), spotifyauth.WithScopes(scopes...))
+
 	NewServer := &Server{
 		port: port,
 
-		db:              db,
-		eventHandler:    events.Handler(db),
-		playlistHandler: playlists.Handler(db),
-		songHandler:     songs.Handler(db),
+		db:          db,
+		spotifyauth: spotifyAuth,
+
+		playlistHandler: playlists.Handler(db, spotifyAuth),
+		songHandler:     songs.Handler(db, spotifyAuth),
+		authHandler:     auth.Handler(db, spotifyAuth),
 	}
 
 	// Declare Server config
