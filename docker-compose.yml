@@ -11,6 +11,9 @@ services:
       - DB_PORT=${DB_PORT}
       - PORT=8080
       - ENV="production"
+      - SPOTIFY_ID=${SPOTIFY_ID}
+      - SPOTIFY_SECRET=${SPOTIFY_SECRET}
+      - SPOTIFY_CALLBACK=${SPOTIFY_CALLBACK}
     depends_on:
       - psql
       - migrate

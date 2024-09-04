@@ -43,7 +43,7 @@ func (a *AuthHandler) SpotifyLogin(c *gin.Context) {
 func (a *AuthHandler) SpotifyCallback(c *gin.Context) {
 	tok, err := a.spotifyauth.Token(c, state, c.Request)
 	if err != nil {
-		merrors.Forbidden(c, "Couldn't get token")
+		merrors.Forbidden(c, fmt.Sprintf("Couldn't get token: %s", err.Error()))
 		return
 	}
 
@@ -74,9 +74,9 @@ func (a *AuthHandler) SpotifyCallback(c *gin.Context) {
 	if errors.Is(err, pgx.ErrNoRows) {
 		// If not, register a new user
 		usr, err := qtx.CreateUser(c, database.CreateUserParams{
-			Email:        user.Email,
-			SpotifyID:    spotifyID,
-			Name:         user.DisplayName,
+			Email:     user.Email,
+			SpotifyID: spotifyID,
+			Name:      user.DisplayName,
 		})
 		userUUID = usr.UserUuid
 		var e *pgconn.PgError
@@ -118,7 +118,7 @@ func (a *AuthHandler) SpotifyCallback(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.BaseResponse{
 		Success:    true,
 		Message:    "Spotify user successfully authenticated",
-		Data:       tok,
+		Data:       gin.H{"token": tok, "user": userUUID},
 		StatusCode: http.StatusOK,
 	})
 }

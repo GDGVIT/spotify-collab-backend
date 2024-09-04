@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS tokens (
     refresh bytea PRIMARY KEY,
     access bytea NOT NULL, 
     expiry timestamp(0) with time zone NOT NULL,
-    CONSTRAINT tokens_users_fk FOREIGN KEY (user_uuid) REFERENCES public.users(user_uuid) ON UPDATE CASCADE
+    CONSTRAINT tokens_users_fk FOREIGN KEY (user_uuid) REFERENCES public.users(user_uuid) ON UPDATE CASCADE ON DELETE CASCADE
 )
