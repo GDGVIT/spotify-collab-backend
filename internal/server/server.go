@@ -32,7 +32,7 @@ func NewServer() *http.Server {
 	port, _ := strconv.Atoi(os.Getenv("PORT"))
 	db := database.NewService()
 
-	redirectURI := "http://localhost:8080/auth/spotify/callback"
+	redirectURI := os.Getenv("SPOTIFY_CALLBACK")
 	scopes := []string{
 		spotifyauth.ScopeUserModifyPlaybackState,
 		spotifyauth.ScopePlaylistModifyPrivate,

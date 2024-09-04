@@ -43,7 +43,7 @@ func (a *AuthHandler) SpotifyLogin(c *gin.Context) {
 func (a *AuthHandler) SpotifyCallback(c *gin.Context) {
 	tok, err := a.spotifyauth.Token(c, state, c.Request)
 	if err != nil {
-		merrors.Forbidden(c, "Couldn't get token")
+		merrors.Forbidden(c, fmt.Sprintf("Couldn't get token: %s", err.Error()))
 		return
 	}
 
@@ -118,7 +118,7 @@ func (a *AuthHandler) SpotifyCallback(c *gin.Context) {
 	c.JSON(http.StatusOK, utils.BaseResponse{
 		Success:    true,
 		Message:    "Spotify user successfully authenticated",
-		Data:       tok,
+		Data:       gin.H{"token": tok, "user": userUUID},
 		StatusCode: http.StatusOK,
 	})
 }
