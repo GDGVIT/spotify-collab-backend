@@ -102,6 +102,9 @@ func (s *SongHandler) AddSongToPlaylist(c *gin.Context) {
 	var message string
 	message = "song rejected"
 
+	tokenChanged := false
+	var oauthToken *oauth2.Token
+
 	if req.Option == "accept" {
 		message = "song successfully added"
 
@@ -111,7 +114,7 @@ func (s *SongHandler) AddSongToPlaylist(c *gin.Context) {
 			return
 		}
 
-		oauthToken := &oauth2.Token{
+		oauthToken = &oauth2.Token{
 			AccessToken:  string(token.Access),
 			RefreshToken: string(token.Refresh),
 			Expiry:       token.Expiry.Time,
@@ -119,6 +122,7 @@ func (s *SongHandler) AddSongToPlaylist(c *gin.Context) {
 
 		if !oauthToken.Valid() {
 			oauthToken, err = s.spotifyauth.RefreshToken(c, oauthToken)
+			tokenChanged = true
 			if err != nil {
 				merrors.InternalServer(c, fmt.Sprintf("Couldn't get access token %s", err))
 				return
@@ -127,6 +131,7 @@ func (s *SongHandler) AddSongToPlaylist(c *gin.Context) {
 			_, err := qtx.UpdateToken(c, database.UpdateTokenParams{
 				Refresh:  []byte(oauthToken.RefreshToken),
 				Access:   []byte(oauthToken.AccessToken),
+				Expiry:   pgtype.Timestamptz{Time: oauthToken.Expiry, Valid: true},
 				UserUuid: user.UserUUID,
 			})
 			if err != nil {
@@ -167,11 +172,20 @@ func (s *SongHandler) AddSongToPlaylist(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, utils.BaseResponse{
-		Success:    true,
-		Message:    message,
-		StatusCode: http.StatusOK,
-	})
+	if tokenChanged == true {
+		c.JSON(http.StatusOK, utils.BaseResponse{
+			Success:    true,
+			Message:    message,
+			MetaData:   oauthToken,
+			StatusCode: http.StatusOK,
+		})
+	} else {
+		c.JSON(http.StatusOK, utils.BaseResponse{
+			Success:    true,
+			Message:    message,
+			StatusCode: http.StatusOK,
+		})
+	}
 }
 
 func (s *SongHandler) GetAllSongs(c *gin.Context) {
@@ -211,8 +225,10 @@ func (s *SongHandler) GetAllSongs(c *gin.Context) {
 		Expiry:       token.Expiry.Time,
 	}
 
+	tokenChanged := false
 	if !oauthToken.Valid() {
 		oauthToken, err = s.spotifyauth.RefreshToken(c, oauthToken)
+		tokenChanged = true
 		if err != nil {
 			merrors.InternalServer(c, fmt.Sprintf("Couldn't get access token %s", err))
 			return
@@ -296,15 +312,28 @@ func (s *SongHandler) GetAllSongs(c *gin.Context) {
 	// 	playlist_tracks = append(playlist_tracks, new_tracks.Items...)
 	// }
 
-	c.JSON(http.StatusOK, utils.BaseResponse{
-		Success: true,
-		Message: "Songs successfully retrieved",
-		Data: gin.H{
-			"submitted": tracks,
-			"accepted":  playlist_tracks,
-		},
-		StatusCode: http.StatusOK,
-	})
+	if tokenChanged == true {
+		c.JSON(http.StatusOK, utils.BaseResponse{
+			Success: true,
+			Message: "Songs successfully retrieved",
+			Data: gin.H{
+				"submitted": tracks,
+				"accepted":  playlist_tracks,
+			},
+			MetaData:   oauthToken,
+			StatusCode: http.StatusOK,
+		})
+	} else {
+		c.JSON(http.StatusOK, utils.BaseResponse{
+			Success: true,
+			Message: "Songs successfully retrieved",
+			Data: gin.H{
+				"submitted": tracks,
+				"accepted":  playlist_tracks,
+			},
+			StatusCode: http.StatusOK,
+		})
+	}
 }
 
 func (s *SongHandler) BlacklistSong(c *gin.Context) {

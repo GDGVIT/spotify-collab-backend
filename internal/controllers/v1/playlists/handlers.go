@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/zmb3/spotify/v2"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
@@ -67,8 +68,10 @@ func (p *PlaylistHandler) CreatePlaylist(c *gin.Context) {
 		Expiry:       token.Expiry.Time,
 	}
 
+	tokenChanged := false
 	if !oauthToken.Valid() {
 		oauthToken, err = p.spotifyauth.RefreshToken(c, oauthToken)
+		tokenChanged = true
 		if err != nil {
 			merrors.InternalServer(c, fmt.Sprintf("Couldn't get access token %s", err))
 			return
@@ -77,6 +80,7 @@ func (p *PlaylistHandler) CreatePlaylist(c *gin.Context) {
 		_, err := qtx.UpdateToken(c, database.UpdateTokenParams{
 			Refresh:  []byte(oauthToken.RefreshToken),
 			Access:   []byte(oauthToken.AccessToken),
+			Expiry:   pgtype.Timestamptz{Time: oauthToken.Expiry, Valid: true},
 			UserUuid: user.UserUUID,
 		})
 		if err != nil {
@@ -111,12 +115,22 @@ func (p *PlaylistHandler) CreatePlaylist(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, utils.BaseResponse{
-		Success:    true,
-		Message:    "playlist successfully created",
-		Data:       playlist,
-		StatusCode: http.StatusOK,
-	})
+	if tokenChanged == true {
+		c.JSON(http.StatusOK, utils.BaseResponse{
+			Success:    true,
+			Message:    "playlist successfully created",
+			Data:       playlist,
+			MetaData:   oauthToken,
+			StatusCode: http.StatusOK,
+		})
+	} else {
+		c.JSON(http.StatusOK, utils.BaseResponse{
+			Success:    true,
+			Message:    "playlist successfully created",
+			Data:       playlist,
+			StatusCode: http.StatusOK,
+		})
+	}
 }
 
 func (p *PlaylistHandler) ListPlaylists(c *gin.Context) {
