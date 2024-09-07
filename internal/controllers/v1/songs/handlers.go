@@ -3,6 +3,7 @@ package songs
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"spotify-collab/internal/controllers/v1/auth"
 	"spotify-collab/internal/database"
@@ -11,6 +12,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/zmb3/spotify/v2"
 	spotifyauth "github.com/zmb3/spotify/v2/auth"
@@ -100,7 +102,7 @@ func (s *SongHandler) AddSongToPlaylist(c *gin.Context) {
 	var message string
 	message = "song rejected"
 
-	if req.Option == "accepted" {
+	if req.Option == "accept" {
 		message = "song successfully added"
 
 		token, err := qtx.GetOAuthToken(c, user.UserUUID)
@@ -150,10 +152,14 @@ func (s *SongHandler) AddSongToPlaylist(c *gin.Context) {
 		}
 	}
 
-	qtx.AddSongToPlaylist(c, database.AddSongToPlaylistParams{
+	err = qtx.AddSongToPlaylist(c, database.AddSongToPlaylistParams{
 		SongUri:      req.SongURI,
 		PlaylistUuid: req.PlaylistUUID,
 	})
+	if err != nil {
+		merrors.InternalServer(c, err.Error())
+		return
+	}
 
 	err = tx.Commit(c)
 	if err != nil {
@@ -215,6 +221,7 @@ func (s *SongHandler) GetAllSongs(c *gin.Context) {
 		_, err := qtx.UpdateToken(c, database.UpdateTokenParams{
 			Refresh:  []byte(oauthToken.RefreshToken),
 			Access:   []byte(oauthToken.AccessToken),
+			Expiry:   pgtype.Timestamptz{Time: oauthToken.Expiry, Valid: true},
 			UserUuid: user.UserUUID,
 		})
 		if err != nil {
@@ -224,10 +231,10 @@ func (s *SongHandler) GetAllSongs(c *gin.Context) {
 	}
 
 	songs, err := qtx.GetAllSongs(c, req.PlaylistUUID)
-	if errors.Is(err, pgx.ErrNoRows) {
-		merrors.NotFound(c, "No Songs exist!")
-		return
-	} else if err != nil {
+	log.Println(errors.Is(err, pgx.ErrNoRows))
+	log.Println(err)
+	log.Println(songs)
+	if err != nil {
 		merrors.InternalServer(c, err.Error())
 		return
 	}
@@ -252,32 +259,42 @@ func (s *SongHandler) GetAllSongs(c *gin.Context) {
 	for _, v := range songs {
 		songIDs = append(songIDs, spotify.ID(v.SongUri))
 	}
-	tracks, err := client.GetTracks(c, songIDs)
-	if err != nil {
-		merrors.InternalServer(c, err.Error())
-		return
-	}
-
-	offset := 0
-	limit := 100
-	var playlist_tracks []spotify.PlaylistItem
-
-	new_tracks, err := client.GetPlaylistItems(c, spotify.ID(playlist), spotify.Limit(limit), spotify.Fields("next,items(track(name,artists(name)))"))
-	playlist_tracks = append(playlist_tracks, new_tracks.Items...)
-	if err != nil {
-		merrors.InternalServer(c, err.Error())
-		return
-	}
-
-	for new_tracks.Next != "" {
-		offset += limit
-		new_tracks, err := client.GetPlaylistItems(c, spotify.ID(playlist), spotify.Limit(limit), spotify.Offset(offset), spotify.Fields("next,items(track(name,artists(name)))"))
-		playlist_tracks = append(playlist_tracks, new_tracks.Items...)
+	log.Println(songs)
+	log.Println(songIDs)
+	var tracks []*spotify.FullTrack
+	if len(songIDs) != 0 {
+		tracks, err = client.GetTracks(c, songIDs)
 		if err != nil {
 			merrors.InternalServer(c, err.Error())
 			return
 		}
 	}
+	log.Println(playlist)
+
+	// offset := 0
+	limit := 100
+	var playlist_tracks []spotify.PlaylistItem
+
+	// new_tracks, err := client.GetPlaylistItems(c, spotify.ID(playlist), spotify.Limit(limit), spotify.Fields("next,items(track(name,artists(name)))"))
+	// new_tracks, err := client.GetPlaylistItems(c, spotify.ID(playlist), spotify.Limit(limit), spotify.Fields("next,items(track(name,artists(name)))"))
+	// new_tracks, err := client.GetPlaylistItems(c, spotify.ID(playlist), spotify.Limit(limit), spotify.Fields("tracks.items(track(name,href,album(!name,href)))"))
+	new_tracks, err := client.GetPlaylistItems(c, spotify.ID(playlist), spotify.Limit(limit))
+	log.Println(new_tracks)
+	if err != nil {
+		merrors.InternalServer(c, err.Error())
+		return
+	}
+	playlist_tracks = append(playlist_tracks, new_tracks.Items...)
+
+	// for new_tracks.Next != "" {
+	// 	offset += limit
+	// 	new_tracks, err := client.GetPlaylistItems(c, spotify.ID(playlist), spotify.Limit(limit), spotify.Offset(offset), spotify.Fields("next,items(track(name,artists(name)))"))
+	// 	if err != nil {
+	// 		merrors.InternalServer(c, err.Error())
+	// 		return
+	// 	}
+	// 	playlist_tracks = append(playlist_tracks, new_tracks.Items...)
+	// }
 
 	c.JSON(http.StatusOK, utils.BaseResponse{
 		Success: true,

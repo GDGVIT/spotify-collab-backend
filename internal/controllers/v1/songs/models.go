@@ -9,7 +9,7 @@ type AddSongToDBReq struct {
 type AddSongToPlaylistReq struct {
 	PlaylistUUID uuid.UUID `json:"playlist_uuid"`
 	SongURI      string    `json:"song_uri"`
-	Option       string    `uri:"option" binding:"oneof= accept reject"`
+	Option       string    `uri:"option"`
 }
 
 type BlacklistSongReq struct {

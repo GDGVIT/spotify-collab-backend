@@ -78,19 +78,25 @@ func (q *Queries) NewToken(ctx context.Context, arg NewTokenParams) (Token, erro
 
 const updateToken = `-- name: UpdateToken :one
 UPDATE tokens
-SET refresh=$1, access=$2
-WHERE user_uuid=$3
+SET refresh=$1, access=$2, expiry=$3
+WHERE user_uuid=$4
 RETURNING user_uuid, refresh, access, expiry
 `
 
 type UpdateTokenParams struct {
-	Refresh  []byte    `json:"refresh"`
-	Access   []byte    `json:"access"`
-	UserUuid uuid.UUID `json:"user_uuid"`
+	Refresh  []byte             `json:"refresh"`
+	Access   []byte             `json:"access"`
+	Expiry   pgtype.Timestamptz `json:"expiry"`
+	UserUuid uuid.UUID          `json:"user_uuid"`
 }
 
 func (q *Queries) UpdateToken(ctx context.Context, arg UpdateTokenParams) (Token, error) {
-	row := q.db.QueryRow(ctx, updateToken, arg.Refresh, arg.Access, arg.UserUuid)
+	row := q.db.QueryRow(ctx, updateToken,
+		arg.Refresh,
+		arg.Access,
+		arg.Expiry,
+		arg.UserUuid,
+	)
 	var i Token
 	err := row.Scan(
 		&i.UserUuid,

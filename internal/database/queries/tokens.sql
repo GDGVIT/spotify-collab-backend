@@ -13,8 +13,8 @@ RETURNING *;
 
 -- name: UpdateToken :one
 UPDATE tokens
-SET refresh=$1, access=$2
-WHERE user_uuid=$3
+SET refresh=$1, access=$2, expiry=$3
+WHERE user_uuid=$4
 RETURNING *;
 
 -- name: GetOAuthToken :one

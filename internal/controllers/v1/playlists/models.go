@@ -6,10 +6,6 @@ type CreatePlaylistReq struct {
 	Name string `json:"name" binding:"required"`
 }
 
-type ListPlaylistsReq struct {
-	UserUUID uuid.UUID `json:"user_uuid" binding:"required"`
-}
-
 type GetPlaylistReq struct {
 	PlaylistUUID string `json:"playlist_uuid" binding:"required,uuid" uri:"id"`
 }

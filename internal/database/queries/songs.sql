@@ -2,8 +2,8 @@
 INSERT INTO songs (song_uri, playlist_uuid)
 VALUES ($1, $2)
 ON CONFLICT ON CONSTRAINT songs_pk
-DO UPDATE SET count = count + 1
-RETURNING *;
+DO UPDATE SET "count" = songs."count" + 1
+RETURNING song_uri, playlist_uuid, "count";
 
 -- name: AddSongToPlaylist :exec
 UPDATE songs
