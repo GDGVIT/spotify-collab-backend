@@ -10,11 +10,6 @@ func validateCreatePlaylist(c *gin.Context) (CreatePlaylistReq, error) {
 	return req, err
 }
 
-func validateListPlaylistsReq(c *gin.Context) (ListPlaylistsReq, error) {
-	var req ListPlaylistsReq
-	err := c.ShouldBindJSON(&req)
-	return req, err
-}
 func validateGetPlaylistReq(c *gin.Context) (GetPlaylistReq, error) {
 	var req GetPlaylistReq
 	err := c.ShouldBindUri(&req)

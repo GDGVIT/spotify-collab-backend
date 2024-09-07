@@ -20,6 +20,7 @@
   - [ ] Error check for value already existing - 422
 - [ ] Auth
 - [x] Integration with the API
+- [ ] Encryption of refresh token in the db 
 - [ ] 
 
 ## Getting Started

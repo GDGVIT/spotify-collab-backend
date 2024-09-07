@@ -21,14 +21,14 @@ func (s *Server) RegisterRoutes() http.Handler {
 	v1 := r.Group("/v1")
 
 	v1.POST("/playlists", s.authenticate(), s.playlistHandler.CreatePlaylist)
-	v1.GET("/playlists", s.playlistHandler.ListPlaylists)
-	v1.GET("/playlists/:id", s.playlistHandler.GetPlaylist)
-	v1.POST("/playlists/:id", s.playlistHandler.UpdatePlaylist)
-	v1.DELETE("/playlists/:id", s.playlistHandler.DeletePlaylist)
+	v1.GET("/playlists", s.authenticate(), s.playlistHandler.ListPlaylists)
+	v1.GET("/playlists/:id", s.authenticate(), s.playlistHandler.GetPlaylist)
+	v1.POST("/playlists/:id", s.authenticate(), s.playlistHandler.UpdatePlaylist)
+	v1.DELETE("/playlists/:id", s.authenticate(), s.playlistHandler.DeletePlaylist)
 
-	v1.POST("/songs/add", s.songHandler.AddSongToDB)
-	v1.POST("/songs/:option", s.authenticate(), s.songHandler.AddSongToPlaylist) // Either accept or reject
-	v1.GET("/songs/all", s.authenticate(), s.songHandler.GetAllSongs)
+	v1.POST("/songs/add", s.songHandler.AddSongToDB)                             // Called by the participants
+	v1.POST("/songs/:option", s.authenticate(), s.songHandler.AddSongToPlaylist) // Either accept or reject, called by the admin to add it to playlist or reject
+	v1.GET("/songs", s.authenticate(), s.songHandler.GetAllSongs)
 
 	v1.POST("/songs/blacklist", s.songHandler.BlacklistSong)
 	v1.GET("/songs/blacklist", s.songHandler.GetBlacklistedSongs)

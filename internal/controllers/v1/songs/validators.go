@@ -1,6 +1,8 @@
 package songs
 
 import (
+	"errors"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,17 +18,20 @@ func validateAddSongToPlaylistReq(c *gin.Context) (AddSongToPlaylistReq, error) 
 		return req, err
 	}
 	err = c.ShouldBindUri(&req)
-	return req, err
-}
-
-func validateBlacklistSongReq(c *gin.Context) (BlacklistSongReq, error) {
-	var req BlacklistSongReq
-	err := c.ShouldBindJSON(&req)
+	if req.Option != "reject" && req.Option != "accept" {
+		return req, errors.New("should be either accpet or reject(case sensitive)")
+	}
 	return req, err
 }
 
 func validateGetAllSongsReq(c *gin.Context) (GetAllSongsReq, error) {
 	var req GetAllSongsReq
+	err := c.ShouldBindJSON(&req)
+	return req, err
+}
+
+func validateBlacklistSongReq(c *gin.Context) (BlacklistSongReq, error) {
+	var req BlacklistSongReq
 	err := c.ShouldBindJSON(&req)
 	return req, err
 }

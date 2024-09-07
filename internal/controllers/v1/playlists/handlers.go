@@ -120,14 +120,18 @@ func (p *PlaylistHandler) CreatePlaylist(c *gin.Context) {
 }
 
 func (p *PlaylistHandler) ListPlaylists(c *gin.Context) {
-	req, err := validateListPlaylistsReq(c)
-	if err != nil {
-		merrors.Validation(c, err.Error())
+	u, ok := c.Get("user")
+	if !ok {
+		panic(" user failed to set in context ")
+	}
+	user := u.(*auth.ContextUser)
+	if user == auth.AnonymousUser {
+		merrors.Unauthorized(c, "This action is forbidden.")
 		return
 	}
 
 	q := database.New(p.db)
-	playlists, err := q.ListPlaylists(c, req.UserUUID)
+	playlists, err := q.ListPlaylists(c, user.UserUUID)
 	if len(playlists) == 0 {
 		merrors.NotFound(c, "No Playlists exist!")
 		return
