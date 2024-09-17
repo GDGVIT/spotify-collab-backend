@@ -40,6 +40,7 @@ func NewServer() *http.Server {
 		spotifyauth.ScopeUserReadPrivate,
 		spotifyauth.ScopeUserReadCurrentlyPlaying,
 		spotifyauth.ScopeUserReadPlaybackState,
+		spotifyauth.ScopeUserReadEmail,
 	}
 	spotifyAuth := spotifyauth.New(spotifyauth.WithRedirectURL(redirectURI), spotifyauth.WithScopes(scopes...))
 
