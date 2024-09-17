@@ -4,9 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
+	"os"
 	"spotify-collab/internal/database"
 	"spotify-collab/internal/merrors"
 	"spotify-collab/internal/utils"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -23,32 +26,54 @@ import (
 const state = "abc123"
 
 type AuthHandler struct {
-	db          *pgxpool.Pool
-	spotifyauth *spotifyauth.Authenticator
+	db               *pgxpool.Pool
+	spotifyauth      *spotifyauth.Authenticator
+	frontendCallback string
+	appCallback      string
 }
 
 func Handler(db *pgxpool.Pool, spotifyAuth *spotifyauth.Authenticator) *AuthHandler {
 	return &AuthHandler{
-		db:          db,
-		spotifyauth: spotifyAuth,
+		db:               db,
+		spotifyauth:      spotifyAuth,
+		frontendCallback: os.Getenv("FRONTEND_CALLBACK_URL"),
+		appCallback:      os.Getenv("APP_CALLBACK_URL"),
 	}
 }
 
 func (a *AuthHandler) SpotifyLogin(c *gin.Context) {
-	url := a.spotifyauth.AuthURL(state)
+	var request struct {
+		Platform string `uri:"platform"`
+	}
+
+	err := c.ShouldBindUri(&request)
+	if err != nil {
+		merrors.Validation(c, err.Error())
+		return
+	}
+	if request.Platform != "app" && request.Platform != "web" {
+		merrors.Validation(c, "either app or web (case sensitive)")
+		return
+	}
+
+	state2 := state + "-" + request.Platform
+	url := a.spotifyauth.AuthURL(state2)
 	fmt.Println("Please log in to Spotify by visiting the following page in your browser:", url)
 	c.Redirect(http.StatusTemporaryRedirect, url)
 }
 
 func (a *AuthHandler) SpotifyCallback(c *gin.Context) {
-	tok, err := a.spotifyauth.Token(c, state, c.Request)
-	if err != nil {
-		merrors.Forbidden(c, fmt.Sprintf("Couldn't get token: %s", err.Error()))
+	st := c.Request.FormValue("state")
+	stSplit := strings.Split(st, "-")
+	if stSplit[0] != state || (stSplit[1] != "app" && stSplit[1] != "web") {
+		merrors.NotFound(c, "State Mismatch!")
 		return
 	}
 
-	if st := c.Request.FormValue("state"); st != state {
-		merrors.NotFound(c, "State Mismatch!")
+	state2 := state + "-" + stSplit[1]
+	tok, err := a.spotifyauth.Token(c, state2, c.Request)
+	if err != nil {
+		merrors.Forbidden(c, fmt.Sprintf("Couldn't get token: %s", err.Error()))
 		return
 	}
 
@@ -109,11 +134,23 @@ func (a *AuthHandler) SpotifyCallback(c *gin.Context) {
 		return
 	}
 
+	queryVal := url.Values{
+		"token": {tok.AccessToken},
+		"user":  {userUUID.String()},
+	}
+
+	var reqURL string
+	if stSplit[1] == "web" {
+		reqURL = a.frontendCallback + "?" + queryVal.Encode()
+	} else if stSplit[1] == "app" {
+		reqURL = a.appCallback + "?" + queryVal.Encode()
+	}
+
 	// queryVal := url.Values{
 	// 	"token": {tok.Plaintext},
 	// }
 	// reqUrl := a.frontendCallback + "?" + queryVal.Encode()
-	// c.Redirect(http.StatusTemporaryRedirect, reqUrl)
+	c.Redirect(http.StatusTemporaryRedirect, reqURL)
 
 	c.JSON(http.StatusOK, utils.BaseResponse{
 		Success:    true,

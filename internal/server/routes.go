@@ -35,7 +35,7 @@ func (s *Server) RegisterRoutes() http.Handler {
 	v1.DELETE("/songs/blacklist", s.songHandler.DeleteBlacklistSong)
 
 	auth := v1.Group("/auth")
-	auth.GET("spotify/login", s.authHandler.SpotifyLogin)
+	auth.GET("spotify/login/:platform", s.authHandler.SpotifyLogin)
 	auth.GET("spotify/callback", s.authHandler.SpotifyCallback)
 
 	return r

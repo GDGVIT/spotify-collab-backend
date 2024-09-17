@@ -14,6 +14,8 @@ services:
       - SPOTIFY_ID=${SPOTIFY_ID}
       - SPOTIFY_SECRET=${SPOTIFY_SECRET}
       - SPOTIFY_CALLBACK=${SPOTIFY_CALLBACK}
+      - FRONTEND_CALLBACK_URL=${FRONTEND_CALLBACK_URL}
+      - APP_CALLBACK_URL=${APP_CALLBACK_URL}
     depends_on:
       - psql
       - migrate
