@@ -65,6 +65,12 @@ func (s *SongHandler) AddSongToDB(c *gin.Context) {
 		return
 	}
 
+	err = tx.Commit(c)
+	if err != nil {
+		merrors.InternalServer(c, err.Error())
+		return
+	}
+
 	c.JSON(http.StatusOK, utils.BaseResponse{
 		Success:    true,
 		Message:    "Song successfully added!",
